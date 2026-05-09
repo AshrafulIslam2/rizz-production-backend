@@ -3,12 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Page } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePageDto } from './dto/create-page.dto';
 import { UpdatePageDto } from './dto/update-page.dto';
 
-type PageTree = Page & { children: PageTree[] };
+type PageWithHero = Prisma.PageGetPayload<{ include: { hero: true } }>;
+type PageTree = PageWithHero & { children: PageTree[] };
 
 @Injectable()
 export class PagesService {
@@ -16,6 +17,7 @@ export class PagesService {
 
   async findAll(): Promise<PageTree[]> {
     const pages = await this.prisma.page.findMany({
+      include: { hero: true },
       orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     });
 
@@ -137,20 +139,21 @@ export class PagesService {
   }
 
   private async findByIdOrThrow(id: string): Promise<PageTree> {
-    const page = await this.prisma.page.findUnique({ where: { id } });
+    const page = await this.prisma.page.findUnique({ where: { id }, include: { hero: true } });
 
     if (!page) {
       throw new NotFoundException(`Page with id ${id} not found`);
     }
 
     const pages = await this.prisma.page.findMany({
+      include: { hero: true },
       orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     });
 
     return this.buildTree(pages).find((item) => item.id === id) ?? { ...page, children: [] };
   }
 
-  private buildTree(pages: Page[]): PageTree[] {
+  private buildTree(pages: PageWithHero[]): PageTree[] {
     const map = new Map<string, PageTree>();
     const roots: PageTree[] = [];
 

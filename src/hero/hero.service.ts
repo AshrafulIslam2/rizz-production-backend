@@ -8,6 +8,16 @@ import { UpdateHeroDto } from './dto/update-hero.dto';
 export class HeroService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findById(heroId: string): Promise<Hero> {
+    const hero = await this.prisma.hero.findUnique({ where: { id: heroId } });
+
+    if (!hero) {
+      throw new NotFoundException(`Hero with id ${heroId} not found`);
+    }
+
+    return hero;
+  }
+
   async findByPageId(pageId: string): Promise<Hero> {
     await this.ensurePageExists(pageId);
 
@@ -91,23 +101,21 @@ export class HeroService {
 
     return this.prisma.hero.update({
       where: { pageId },
-      data: {
-        type: nextType,
-        backgroundImageUrl:
-          nextType === HeroType.IMAGE
-            ? (dto.backgroundImageUrl ?? existing.backgroundImageUrl ?? null)
-            : null,
-        backgroundVideoUrl:
-          nextType === HeroType.VIDEO
-            ? (dto.backgroundVideoUrl ?? existing.backgroundVideoUrl ?? null)
-            : null,
-        slogan: dto.slogan,
-        title: dto.title,
-        subtitle: dto.subtitle,
-        keyPoints: dto.keyPoints,
-        isActive: dto.isActive,
-        order: dto.order,
-      },
+      data: this.buildPatchData(dto, existing, nextType),
+    });
+  }
+
+  async patchById(heroId: string, dto: UpdateHeroDto): Promise<Hero> {
+    const existing = await this.findById(heroId);
+    const nextType = dto.type ?? existing.type;
+    const nextBackgroundImageUrl = dto.backgroundImageUrl ?? existing.backgroundImageUrl ?? undefined;
+    const nextBackgroundVideoUrl = dto.backgroundVideoUrl ?? existing.backgroundVideoUrl ?? undefined;
+
+    this.validateMediaForType(nextType, nextBackgroundImageUrl, nextBackgroundVideoUrl);
+
+    return this.prisma.hero.update({
+      where: { id: heroId },
+      data: this.buildPatchData(dto, existing, nextType),
     });
   }
 
@@ -145,5 +153,25 @@ export class HeroService {
     if (type === HeroType.VIDEO && !backgroundVideoUrl) {
       throw new BadRequestException('backgroundVideoUrl is required when type is video');
     }
+  }
+
+  private buildPatchData(dto: UpdateHeroDto, existing: Hero, nextType: HeroType) {
+    return {
+      type: nextType,
+      backgroundImageUrl:
+        nextType === HeroType.IMAGE
+          ? (dto.backgroundImageUrl ?? existing.backgroundImageUrl ?? null)
+          : null,
+      backgroundVideoUrl:
+        nextType === HeroType.VIDEO
+          ? (dto.backgroundVideoUrl ?? existing.backgroundVideoUrl ?? null)
+          : null,
+      slogan: dto.slogan,
+      title: dto.title,
+      subtitle: dto.subtitle,
+      keyPoints: dto.keyPoints,
+      isActive: dto.isActive,
+      order: dto.order,
+    };
   }
 }

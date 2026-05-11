@@ -31,6 +31,8 @@ NestJS backend scaffolded with Prisma ORM and PostgreSQL.
 - `PUT /api/pages/:pageId/hero` - replace hero for a page
 - `PATCH /api/pages/:pageId/hero` - partially update hero for a page
 - `DELETE /api/pages/:pageId/hero` - delete hero for a page
+- `GET /api/hero/:heroId` - fetch hero directly by hero id
+- `PATCH /api/hero/:heroId` - partially update hero directly by hero id
 
 ## Example page tree payload
 

@@ -17,7 +17,7 @@ export class PagesService {
 
   async findAll(): Promise<PageTree[]> {
     const pages = await this.prisma.page.findMany({
-      include: { hero: true },
+      include: { hero: true ,faqs: true},
       orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     });
 

@@ -33,6 +33,19 @@ NestJS backend scaffolded with Prisma ORM and PostgreSQL.
 - `DELETE /api/pages/:pageId/hero` - delete hero for a page
 - `GET /api/hero/:heroId` - fetch hero directly by hero id
 - `PATCH /api/hero/:heroId` - partially update hero directly by hero id
+- `GET /api/pages/:pageId/faqs` - fetch all FAQs for a page with JSON-LD schema
+- `GET /api/pages/:pageId/faqs/schema` - fetch JSON-LD schema for all enabled FAQs on a page
+- `GET /api/pages/:pageId/faqs/:faqId` - fetch a single FAQ on a page
+- `POST /api/pages/:pageId/faqs` - create a FAQ for a page
+- `PUT /api/pages/:pageId/faqs/:faqId` - replace a FAQ for a page
+- `PATCH /api/pages/:pageId/faqs/:faqId` - partially update a FAQ for a page
+- `DELETE /api/pages/:pageId/faqs/:faqId` - delete a FAQ for a page
+ - `GET /api/categories` - fetch all categories
+ - `GET /api/categories/:id` - fetch a single category
+ - `POST /api/categories` - create a category
+ - `PUT /api/categories/:id` - replace a category
+ - `PATCH /api/categories/:id` - partially update a category
+ - `DELETE /api/categories/:id` - delete a category
 
 ## Example page tree payload
 
@@ -65,5 +78,27 @@ NestJS backend scaffolded with Prisma ORM and PostgreSQL.
   "keyPoints": ["Free shipping", "30-day return", "Premium materials"],
   "isActive": true,
   "order": 1
+}
+```
+
+## Example FAQ payload
+
+```json
+{
+  "question": "How long does shipping take?",
+  "answer": "Shipping usually takes 3-5 business days.",
+  "short_answer": "3-5 business days",
+  "answer_type": "text",
+  "intent_type": "shipping",
+  "seo_title": "Shipping timeline for orders",
+  "seo_description": "Learn how long shipping takes and what affects delivery times.",
+  "slug": "how-long-does-shipping-take",
+  "schema_enabled": true,
+  "ai_summary": "This FAQ explains the standard delivery window.",
+  "entity_tags": ["shipping", "delivery"],
+  "source_url": "https://example.com/shipping",
+  "fact_check_status": "verified",
+  "last_verified_at": "2026-05-15T00:00:00.000Z",
+  "context": "Use this answer on checkout and delivery pages."
 }
 ```

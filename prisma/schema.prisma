@@ -18,6 +18,35 @@ enum HeroType {
   VIDEO
 }
 
+enum FaqAnswerType {
+  TEXT
+  SHORT
+  LIST
+  STEPS
+  COMPARISON
+  TABLE
+  DEFINITION
+}
+
+enum FaqIntentType {
+  DEFINITION
+  PRICING
+  HOW_TO
+  COMPARISON
+  SHIPPING
+  CARE
+  RETURN_POLICY
+  AVAILABILITY
+  TROUBLESHOOTING
+}
+
+enum FaqFactCheckStatus {
+  PENDING
+  VERIFIED
+  NEEDS_REVIEW
+  REJECTED
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -37,6 +66,7 @@ model Page {
   parent    Page?    @relation("PageChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children  Page[]   @relation("PageChildren")
   hero      Hero?
+  faqs      Faq[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -58,4 +88,52 @@ model Hero {
   order              Int?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model Faq {
+  id                String              @id @default(cuid())
+  page_id           String
+  page              Page                @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  question          String
+  answer            String
+  short_answer      String
+  answer_type       FaqAnswerType
+  intent_type       FaqIntentType
+  seo_title         String
+  seo_description   String
+  slug              String
+  schema_enabled    Boolean             @default(true)
+  ai_summary        String
+  entity_tags       String[]
+  source_url        String
+  fact_check_status FaqFactCheckStatus
+  last_verified_at  DateTime
+  context           String
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+
+  @@unique([page_id, slug])
+  @@index([page_id])
+}
+
+model Category {
+  id              String     @id @default(cuid())
+  name            String
+  slug            String     @unique
+  description     String?
+  parent_id       String?
+  parent          Category?  @relation("CategoryChildren", fields: [parent_id], references: [id], onDelete: Cascade)
+  children        Category[] @relation("CategoryChildren")
+  is_active       Boolean    @default(true)
+  is_featured     Boolean    @default(false)
+  show_on_homepage Boolean   @default(false)
+  thumbnail_image String?
+  banner_image    String?
+  seo_title       String?
+  seo_description String?
+  order           Int        @default(0)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+
+  @@index([parent_id, order])
 }

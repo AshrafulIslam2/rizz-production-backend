@@ -47,6 +47,28 @@ enum FaqFactCheckStatus {
   REJECTED
 }
 
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PromotionType {
+  BOGO
+  PERCENTAGE_DISCOUNT
+  FLAT_DISCOUNT
+  BUNDLE
+  FREE_SHIPPING
+}
+
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  ARCHIVED
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -136,4 +158,128 @@ model Category {
   updated_at      DateTime   @updatedAt
 
   @@index([parent_id, order])
+}
+
+model Product {
+  id                String        @id @default(cuid())
+  sku               String        @unique
+  name              String
+  slug              String        @unique
+  short_description String?
+  description       String?
+  brand_id          String
+  category_id       String
+  category          Category      @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  status            ProductStatus @default(DRAFT)
+  is_featured       Boolean       @default(false)
+  is_published      Boolean       @default(false)
+  tags              String[]
+  gender            String?
+  age_group         String?
+  material          String?
+  tax_class         String?
+  weight            Float?
+  length            Float?
+  width             Float?
+  height            Float?
+  variants          ProductVariant[]
+  images            ProductImage[]
+  seo               ProductSeo?
+  translations      ProductTranslation[]
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  @@index([category_id])
+  @@index([brand_id])
+  @@index([status, is_published])
+}
+
+model ProductVariant {
+  id           String        @id @default(cuid())
+  product_id   String
+  product      Product       @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  sku          String        @unique
+  variant_name String
+  price        Float
+  sale_price   Float?
+  stock_qty    Int           @default(0)
+  attributes   Json
+  barcode      String?
+  is_default   Boolean       @default(false)
+  status       ProductStatus @default(DRAFT)
+  images       ProductImage[]
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  @@index([product_id])
+  @@index([status, is_default])
+}
+
+model ProductImage {
+  id          String         @id @default(cuid())
+  product_id  String
+  product     Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  variant_id  String?
+  variant     ProductVariant? @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+  image_url   String
+  alt_text    String?
+  is_primary  Boolean        @default(false)
+  sort_order  Int            @default(0)
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+
+  @@index([product_id, sort_order])
+  @@index([variant_id])
+  @@index([is_primary])
+}
+
+model ProductSeo {
+  product_id       String  @unique
+  product          Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  meta_title       String
+  meta_description String
+  meta_keywords    String?
+  canonical_url    String?
+  slug             String  @unique
+  og_title         String?
+  og_description   String?
+  og_image         String?
+  schema_json      Json?
+}
+
+model ProductTranslation {
+  id                String  @id @default(cuid())
+  product_id        String
+  product           Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  lang_code         String
+  name              String
+  short_description String?
+  description       String?
+  seo_title         String?
+  seo_description   String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@unique([product_id, lang_code])
+  @@index([lang_code])
+}
+
+model Promotion {
+  id           String           @id @default(cuid())
+  name         String
+  type         PromotionType
+  value        Float?
+  start_at     DateTime?
+  end_at       DateTime?
+  status       PromotionStatus  @default(DRAFT)
+  stackable    Boolean          @default(false)
+  priority     Int              @default(0)
+  usage_limit  Int?
+  rules_json   Json
+  benefit_json Json
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  @@index([status, start_at, end_at])
+  @@index([priority])
 }

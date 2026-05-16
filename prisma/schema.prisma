@@ -69,6 +69,43 @@ enum PromotionStatus {
   ARCHIVED
 }
 
+enum PromotionConditionType {
+  MIN_QTY
+  MIN_CART_VALUE
+  PRODUCT_INCLUDED
+  CATEGORY_INCLUDED
+  BRAND_INCLUDED
+  USER_SEGMENT
+  REGION
+  PAYMENT_METHOD
+  FIRST_ORDER_ONLY
+}
+
+enum PromotionTargetType {
+  PRODUCT
+  CATEGORY
+  BRAND
+}
+
+enum PromotionBenefitType {
+  PERCENTAGE_DISCOUNT
+  FLAT_DISCOUNT
+  BOGO
+  FREE_SHIPPING
+  BUNDLE
+}
+
+enum PromotionDiscountUnit {
+  PERCENT
+  AMOUNT
+}
+
+enum PromotionApplyTo {
+  ORDER
+  ITEM
+  SHIPPING
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -167,6 +204,14 @@ model Product {
   slug              String        @unique
   short_description String?
   description       String?
+  faq_json          Json?
+  key_features      String[]
+  materials         String[]
+  specifications    Json?
+  use_cases         String[]
+  how_to_use        String?
+  benefits          String[]
+  problem_solved    String?
   brand_id          String
   category_id       String
   category          Category      @relation(fields: [category_id], references: [id], onDelete: Restrict)
@@ -186,6 +231,8 @@ model Product {
   images            ProductImage[]
   seo               ProductSeo?
   translations      ProductTranslation[]
+  faqs              ProductFaq[]
+  reviews           ProductReview[]
   created_at        DateTime      @default(now())
   updated_at        DateTime      @updatedAt
 
@@ -264,22 +311,110 @@ model ProductTranslation {
   @@index([lang_code])
 }
 
+model ProductFaq {
+  id         String  @id @default(cuid())
+  product_id String
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  question   String
+  answer     String
+  order      Int     @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([product_id, order])
+}
+
+model ProductReview {
+  id                 String   @id @default(cuid())
+  product_id         String
+  product            Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  customer_name      String
+  customer_image_url String?
+  comment            String?
+  image_urls         String[]
+  video_urls         String[]
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@index([product_id])
+}
+
 model Promotion {
-  id           String           @id @default(cuid())
-  name         String
-  type         PromotionType
-  value        Float?
-  start_at     DateTime?
-  end_at       DateTime?
-  status       PromotionStatus  @default(DRAFT)
-  stackable    Boolean          @default(false)
-  priority     Int              @default(0)
-  usage_limit  Int?
-  rules_json   Json
-  benefit_json Json
-  created_at   DateTime         @default(now())
-  updated_at   DateTime         @updatedAt
+  id             String           @id @default(cuid())
+  name           String
+  code           String           @unique
+  type           PromotionType
+  status         PromotionStatus  @default(DRAFT)
+  start_at       DateTime?
+  end_at         DateTime?
+  priority       Int              @default(0)
+  stackable      Boolean          @default(false)
+  usage_limit    Int?
+  per_user_limit Int?
+  conditions     PromotionCondition[]
+  targets        PromotionTarget[]
+  benefits       PromotionBenefit[]
+  redemptions    PromotionRedemption[]
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
 
   @@index([status, start_at, end_at])
   @@index([priority])
+}
+
+model PromotionCondition {
+  id             String    @id @default(cuid())
+  promotion_id   String
+  promotion      Promotion @relation(fields: [promotion_id], references: [id], onDelete: Cascade)
+  condition_type PromotionConditionType
+  operator       String
+  value          String
+  extra_value    String?
+  created_at     DateTime  @default(now())
+
+  @@index([promotion_id])
+  @@index([condition_type])
+}
+
+model PromotionTarget {
+  id            String              @id @default(cuid())
+  promotion_id  String
+  promotion     Promotion           @relation(fields: [promotion_id], references: [id], onDelete: Cascade)
+  target_type   PromotionTargetType
+  target_id     String
+  created_at    DateTime            @default(now())
+
+  @@index([promotion_id])
+  @@index([target_type, target_id])
+}
+
+model PromotionBenefit {
+  id                  String               @id @default(cuid())
+  promotion_id        String
+  promotion           Promotion            @relation(fields: [promotion_id], references: [id], onDelete: Cascade)
+  benefit_type        PromotionBenefitType
+  discount_value      Float?
+  discount_unit       PromotionDiscountUnit?
+  max_discount_amount Float?
+  buy_qty             Int?
+  get_qty             Int?
+  apply_to            PromotionApplyTo?
+  created_at          DateTime             @default(now())
+
+  @@index([promotion_id])
+  @@index([benefit_type])
+}
+
+model PromotionRedemption {
+  id              String    @id @default(cuid())
+  promotion_id    String
+  promotion       Promotion @relation(fields: [promotion_id], references: [id], onDelete: Cascade)
+  user_id         String?
+  order_id        String?
+  redeemed_at     DateTime  @default(now())
+  discount_amount Float?
+
+  @@index([promotion_id])
+  @@index([user_id])
+  @@index([order_id])
 }

@@ -128,7 +128,6 @@ model Page {
   faqs      Faq[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   @@index([parentId, order])
 }
 
@@ -183,6 +182,7 @@ model Category {
   parent_id       String?
   parent          Category?  @relation("CategoryChildren", fields: [parent_id], references: [id], onDelete: Cascade)
   children        Category[] @relation("CategoryChildren")
+  products        Product[]
   is_active       Boolean    @default(true)
   is_featured     Boolean    @default(false)
   show_on_homepage Boolean   @default(false)
@@ -228,6 +228,7 @@ model Product {
   width             Float?
   height            Float?
   variants          ProductVariant[]
+  media             ProductMedia[]
   images            ProductImage[]
   seo               ProductSeo?
   translations      ProductTranslation[]
@@ -255,6 +256,7 @@ model ProductVariant {
   is_default   Boolean       @default(false)
   status       ProductStatus @default(DRAFT)
   images       ProductImage[]
+  media        ProductMedia[]
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
 
@@ -278,6 +280,36 @@ model ProductImage {
   @@index([product_id, sort_order])
   @@index([variant_id])
   @@index([is_primary])
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model ProductMedia {
+  id            String         @id @default(cuid())
+  product_id    String
+  product       Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  variant_id    String?
+  variant       ProductVariant? @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+  media_type    MediaType
+  media_url     String
+  thumbnail_url String?
+  alt_text      String?
+  title         String?
+  sort_order    Int            @default(0)
+  is_primary    Boolean        @default(false)
+  is_featured   Boolean        @default(false)
+  status        ProductStatus  @default(DRAFT)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  @@index([product_id, sort_order])
+  @@index([variant_id])
+  @@index([is_primary])
+  @@index([is_featured])
+  @@index([status])
 }
 
 model ProductSeo {

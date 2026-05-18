@@ -46,6 +46,8 @@ NestJS backend scaffolded with Prisma ORM and PostgreSQL.
  - `PUT /api/categories/:id` - replace a category
  - `PATCH /api/categories/:id` - partially update a category
  - `DELETE /api/categories/:id` - delete a category
+- `GET /api/products` - fetch all products with related data
+- `GET /api/products/:productId` - fetch a single product with related data
 - `POST /api/products` - create a product with optional nested data
 - `POST /api/products/:productId/variants` - add a variant to a product
 - `POST /api/products/:productId/images` - add an image to a product (optional `variant_id`)

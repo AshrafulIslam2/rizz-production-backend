@@ -16,6 +16,42 @@ import {
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAll() {
+    return this.prisma.product.findMany({
+      orderBy: { created_at: 'desc' },
+    //   include: {
+    //     variants: true,
+    //     images: true,
+    //     media: true,
+    //     seo: true,
+    //     translations: true,
+    //     faqs: true,
+    //     reviews: true,
+    //   },
+    });
+  }
+
+  async findOne(productId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId } as any,
+      include: {
+        variants: true,
+        images: true,
+        media: true,
+        seo: true,
+        translations: true,
+        faqs: true,
+        reviews: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+
+    return product;
+  }
+
   async create(dto: CreateProductDto) {
     await this.ensureUniqueSku(dto.sku);
     await this.ensureUniqueSlug(dto.slug);

@@ -7,9 +7,28 @@ import { HeroModule } from './hero/hero.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PagesModule } from './pages/pages.module';
 import { ProductsModule } from './products/products.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { OrdersModule } from './orders/orders.module';
+import { BrandingModule } from './branding/branding.module';
+import { HomepageModule } from './homepage/homepage.module';
+import { PoliciesModule } from './policies/policies.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
 
 @Module({
-  imports: [PrismaModule, PagesModule, HeroModule, FaqModule, CategoriesModule, ProductsModule],
+  imports: [
+    PrismaModule,
+    PagesModule,
+    HeroModule,
+    FaqModule,
+    CategoriesModule,
+    ProductsModule,
+    ReviewsModule,
+    OrdersModule,
+    BrandingModule,
+    HomepageModule,
+    PoliciesModule,
+    CampaignsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

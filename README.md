@@ -48,6 +48,7 @@ NestJS backend scaffolded with Prisma ORM and PostgreSQL.
  - `DELETE /api/categories/:id` - delete a category
 - `GET /api/products` - fetch all products with related data
 - `GET /api/products/:productId` - fetch a single product with related data
+ - `GET /api/products/:productId/variants` - fetch all variants for a product
 - `POST /api/products` - create a product with optional nested data
 - `POST /api/products/:productId/variants` - add a variant to a product
 - `POST /api/products/:productId/images` - add an image to a product (optional `variant_id`)

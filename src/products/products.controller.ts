@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   CreateProductDto,
   CreateProductFaqDto,
@@ -9,6 +9,11 @@ import {
   CreateProductVariantDto,
 } from './dto/create-product.dto';
 import { CreateProductMediaDto } from './dto/create-media.dto';
+import { UpdateProductBasicInfoDto } from './dto/update-product-basic-info.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
+import { UpdateFaqDto } from './dto/update-faq.dto';
+import { UpdateMediaDto } from './dto/update-media.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -30,21 +35,90 @@ export class ProductsController {
     return this.productsService.create(dto);
   }
 
+  @Patch(':productId')
+  update(@Param('productId') productId: string, @Body() dto: UpdateProductDto) {
+    return this.productsService.update(productId, dto);
+  }
+
+  @Delete(':productId')
+  remove(@Param('productId') productId: string) {
+    return this.productsService.remove(productId);
+  }
+
+  @Patch(':productId/basic-info')
+  updateBasicInfo(@Param('productId') productId: string, @Body() dto: UpdateProductBasicInfoDto) {
+    return this.productsService.updateBasicInfo(productId, dto);
+  }
+
+  // Variants
   @Post(':productId/variants')
   createVariant(@Param('productId') productId: string, @Body() dto: CreateProductVariantDto) {
     return this.productsService.createVariant(productId, dto);
   }
 
+  @Get(':productId/variants')
+  findVariants(@Param('productId') productId: string) {
+    return this.productsService.findVariants(productId);
+  }
+
+  @Patch(':productId/variants/:variantId')
+  updateVariant(
+    @Param('productId') productId: string,
+    @Param('variantId') variantId: string,
+    @Body() dto: UpdateVariantDto,
+  ) {
+    return this.productsService.updateVariant(productId, variantId, dto);
+  }
+
+  @Delete(':productId/variants/:variantId')
+  removeVariant(
+    @Param('productId') productId: string,
+    @Param('variantId') variantId: string,
+  ) {
+    return this.productsService.removeVariant(productId, variantId);
+  }
+
+  // Images
   @Post(':productId/images')
   createImage(@Param('productId') productId: string, @Body() dto: CreateProductImageDto) {
     return this.productsService.createImage(productId, dto);
   }
 
+  // Media
+  @Post(':productId/media')
+  createMedia(@Param('productId') productId: string, @Body() dto: CreateProductMediaDto) {
+    return this.productsService.createMedia(productId, dto);
+  }
+
+  @Get(':productId/media')
+  findMedia(@Param('productId') productId: string) {
+    return this.productsService.findMedia(productId);
+  }
+
+  @Patch(':productId/media/:mediaId')
+  updateMedia(
+    @Param('productId') productId: string,
+    @Param('mediaId') mediaId: string,
+    @Body() dto: UpdateMediaDto,
+  ) {
+    return this.productsService.updateMedia(productId, mediaId, dto);
+  }
+
+  @Delete(':productId/media/:mediaId')
+  removeMedia(
+    @Param('productId') productId: string,
+    @Param('mediaId') mediaId: string,
+  ) {
+    return this.productsService.removeMedia(productId, mediaId);
+  }
+
+  // SEO
   @Post(':productId/seo')
   createSeo(@Param('productId') productId: string, @Body() dto: CreateProductSeoDto) {
     return this.productsService.createSeo(productId, dto);
   }
 
+  // Translations
   @Post(':productId/translations')
   createTranslation(
     @Param('productId') productId: string,
@@ -53,18 +127,37 @@ export class ProductsController {
     return this.productsService.createTranslation(productId, dto);
   }
 
+  // FAQs
   @Post(':productId/faqs')
   createFaq(@Param('productId') productId: string, @Body() dto: CreateProductFaqDto) {
     return this.productsService.createFaq(productId, dto);
   }
 
+  @Get(':productId/faqs')
+  findFaqs(@Param('productId') productId: string) {
+    return this.productsService.findFaqs(productId);
+  }
+
+  @Patch(':productId/faqs/:faqId')
+  updateFaq(
+    @Param('productId') productId: string,
+    @Param('faqId') faqId: string,
+    @Body() dto: UpdateFaqDto,
+  ) {
+    return this.productsService.updateFaq(productId, faqId, dto);
+  }
+
+  @Delete(':productId/faqs/:faqId')
+  removeFaq(
+    @Param('productId') productId: string,
+    @Param('faqId') faqId: string,
+  ) {
+    return this.productsService.removeFaq(productId, faqId);
+  }
+
+  // Reviews
   @Post(':productId/reviews')
   createReview(@Param('productId') productId: string, @Body() dto: CreateProductReviewDto) {
     return this.productsService.createReview(productId, dto);
-  }
-
-  @Post(':productId/media')
-  createMedia(@Param('productId') productId: string, @Body() dto: CreateProductMediaDto) {
-    return this.productsService.createMedia(productId, dto);
   }
 }

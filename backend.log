@@ -1,0 +1,224 @@
+
+> rizz-admin-panel-backend@0.0.1 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m1:03:04 AM[0m] Starting compilation in watch mode...
+
+[[90m1:03:08 AM[0m] Found 0 errors. Watching for file changes.
+
+(node:19256) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +18ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mReviewsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPagesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHeroModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFaqModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCategoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mProductsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mOrdersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBrandingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHomepageModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPoliciesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCampaignsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/api}:[39m[38;5;3m +6ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPagesController {/api/pages}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHeroController {/api/pages/:pageId/hero}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/hero, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/hero, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/hero, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/hero, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/hero, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHeroByIdController {/api/hero}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/hero/:heroId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/hero/:heroId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFaqController {/api/pages/:pageId/faqs}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs/schema, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs/:faqId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs/:faqId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs/:faqId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pages/:pageId/faqs/:faqId, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCategoriesController {/api/categories}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProductsController {/api/products}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/basic-info, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/variants, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/variants, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/variants/:variantId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/variants/:variantId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/images, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/media, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/media, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/media/:mediaId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/media/:mediaId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/seo, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/translations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/faqs, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/faqs, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/faqs/:faqId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/faqs/:faqId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:productId/reviews, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReviewsController {/api/reviews}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reviews, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reviews/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reviews/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrdersController {/api/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBrandingController {/api/branding}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/branding, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/branding, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHomepageController {/api/homepage}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/homepage/:section, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/homepage/:section, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPoliciesController {/api/policies}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/policies/:key, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/policies/:key, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCampaignsController {/api/campaigns}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/campaigns, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/campaigns, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/campaigns/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/campaigns/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +66ms[39m
+[31m[Nest] 9996  - [39m06/19/2026, 1:03:10 AM [31m  ERROR[39m [38;5;3m[NestApplication] [39m[31mError: listen EADDRINUSE: address already in use :::3040[39m[38;5;3m +1ms[39m
+node:[31m[Nest] 18304  - [39m06/19/2026, 1:07:26 AM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31m
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`[39m
+PrismaClientKnownRequestError: 
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`
+    at ei.handleRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 18304  - [39m06/19/2026, 1:07:44 AM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31m
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`[39m
+PrismaClientKnownRequestError: 
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`
+    at ei.handleRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 18304  - [39m06/19/2026, 1:09:29 AM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31m
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`[39m
+PrismaClientKnownRequestError: 
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`
+    at ei.handleRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 18304  - [39m06/19/2026, 1:17:17 AM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31m
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`[39m
+PrismaClientKnownRequestError: 
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`
+    at ei.handleRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 18304  - [39m06/19/2026, 1:18:13 AM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31m
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`[39m
+PrismaClientKnownRequestError: 
+Invalid `this.prisma.product.create()` invocation in
+F:\rizz_admin_panel_backend\src\products\products.service.ts:88:32
+
+  85   await this.ensureUniqueSeoSlug(dto.seo.slug);
+  86 }
+  87 
+→ 88 return this.prisma.product.create(
+Foreign key constraint violated on the constraint: `Product_category_id_fkey`
+    at ei.handleRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (F:\rizz_admin_panel_backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\rizz_admin_panel_backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

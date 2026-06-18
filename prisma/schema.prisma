@@ -204,7 +204,6 @@ model Product {
   slug              String        @unique
   short_description String?
   description       String?
-  faq_json          Json?
   key_features      String[]
   materials         String[]
   specifications    Json?
@@ -212,9 +211,12 @@ model Product {
   how_to_use        String?
   benefits          String[]
   problem_solved    String?
-  brand_id          String
-  category_id       String
-  category          Category      @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  brand_id          String        @default("")
+  category_id       String?
+  category          Category?     @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  price             Float?
+  compare_at_price  Float?
+  sale_price        Float?
   status            ProductStatus @default(DRAFT)
   is_featured       Boolean       @default(false)
   is_published      Boolean       @default(false)
@@ -363,12 +365,15 @@ model ProductReview {
   customer_name      String
   customer_image_url String?
   comment            String?
+  rating             Int?
+  status             String   @default("pending")
   image_urls         String[]
   video_urls         String[]
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
   @@index([product_id])
+  @@index([status])
 }
 
 model Promotion {
@@ -449,4 +454,50 @@ model PromotionRedemption {
   @@index([promotion_id])
   @@index([user_id])
   @@index([order_id])
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  order_number   String   @unique
+  customer_name  String
+  customer_phone String
+  division       String?
+  district       String?
+  area           String?
+  address        String
+  items          Json
+  subtotal       Float
+  shipping_fee   Float    @default(0)
+  total          Float
+  payment_method String   @default("COD")
+  status         String   @default("pending")
+  notes          String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([status])
+  @@index([order_number])
+}
+
+model Setting {
+  key        String   @id
+  value      Json
+  updated_at DateTime @updatedAt
+}
+
+model Campaign {
+  id             String   @id @default(cuid())
+  name           String
+  type           String
+  code           String?
+  discount_value Float?
+  discount_type  String?
+  start_date     DateTime?
+  end_date       DateTime?
+  is_active      Boolean  @default(true)
+  image_url      String?
+  headline       String?
+  body           String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 }

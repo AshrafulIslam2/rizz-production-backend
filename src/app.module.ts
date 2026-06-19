@@ -13,6 +13,7 @@ import { BrandingModule } from './branding/branding.module';
 import { HomepageModule } from './homepage/homepage.module';
 import { PoliciesModule } from './policies/policies.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CampaignsModule } from './campaigns/campaigns.module';
     HomepageModule,
     PoliciesModule,
     CampaignsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

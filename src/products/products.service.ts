@@ -24,6 +24,9 @@ export class ProductsService {
   async findAll() {
     return this.prisma.product.findMany({
       orderBy: { created_at: 'desc' },
+      include: {
+        media: { orderBy: { is_primary: 'desc' } },
+      },
     });
   }
 

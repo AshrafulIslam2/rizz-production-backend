@@ -1,4 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import {
   CreateProductDto,
   CreateProductFaqDto,
@@ -18,7 +32,10 @@ import { ProductsService } from './products.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   findAll() {
@@ -110,6 +127,25 @@ export class ProductsController {
     @Param('mediaId') mediaId: string,
   ) {
     return this.productsService.removeMedia(productId, mediaId);
+  }
+
+  @Post(':productId/media/upload')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } }))
+  async uploadMedia(
+    @Param('productId') productId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('alt_text') altText?: string,
+    @Body('title') title?: string,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded.');
+    const { url } = await this.cloudinaryService.uploadFile(file.buffer, file.mimetype);
+    const media_type = file.mimetype.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+    return this.productsService.createMedia(productId, {
+      media_url: url,
+      media_type,
+      alt_text: altText,
+      title,
+    } as any);
   }
 
   // SEO

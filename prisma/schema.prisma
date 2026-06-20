@@ -229,6 +229,8 @@ model Product {
   length            Float?
   width             Float?
   height            Float?
+  meta_title        String?
+  meta_description  String?
   variants          ProductVariant[]
   media             ProductMedia[]
   images            ProductImage[]
@@ -457,23 +459,27 @@ model PromotionRedemption {
 }
 
 model Order {
-  id             String   @id @default(cuid())
-  order_number   String   @unique
-  customer_name  String
-  customer_phone String
-  division       String?
-  district       String?
-  area           String?
-  address        String
-  items          Json
-  subtotal       Float
-  shipping_fee   Float    @default(0)
-  total          Float
-  payment_method String   @default("COD")
-  status         String   @default("pending")
-  notes          String?
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  order_number    String   @unique
+  customer_name   String
+  customer_phone  String
+  division        String?
+  district        String?
+  area            String?
+  address         String
+  items           Json
+  subtotal        Float
+  shipping_fee    Float    @default(0)
+  discount_amount Float    @default(0)
+  promo_code      String?
+  campaign_ids    String[] @default([])
+  free_gifts      Json?
+  total           Float
+  payment_method  String   @default("COD")
+  status          String   @default("pending")
+  notes           String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
   @@index([status])
   @@index([order_number])
@@ -486,18 +492,26 @@ model Setting {
 }
 
 model Campaign {
-  id             String   @id @default(cuid())
-  name           String
-  type           String
-  code           String?
-  discount_value Float?
-  discount_type  String?
-  start_date     DateTime?
-  end_date       DateTime?
-  is_active      Boolean  @default(true)
-  image_url      String?
-  headline       String?
-  body           String?
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  name                  String
+  type                  String    @default("promotion")
+  code                  String?   @unique
+  requires_code         Boolean   @default(false)
+  discount_type         String?
+  discount_value        Float?
+  buy_qty               Int?
+  get_qty               Int?
+  free_shipping         Boolean   @default(false)
+  free_gift_product_id  String?
+  usage_limit           Int?
+  used_count            Int       @default(0)
+  product_ids           String[]  @default([])
+  start_date            DateTime?
+  end_date              DateTime?
+  is_active             Boolean   @default(true)
+  image_url             String?
+  headline              String?
+  body                  String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 }

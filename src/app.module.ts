@@ -14,6 +14,7 @@ import { HomepageModule } from './homepage/homepage.module';
 import { PoliciesModule } from './policies/policies.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { SeoModule } from './seo/seo.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UploadsModule } from './uploads/uploads.module';
     PoliciesModule,
     CampaignsModule,
     UploadsModule,
+    SeoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

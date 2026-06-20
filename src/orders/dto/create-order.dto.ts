@@ -32,6 +32,23 @@ export class CreateOrderDto {
   @IsNumber()
   shipping_fee?: number;
 
+  @IsOptional()
+  @IsNumber()
+  discount_amount?: number;
+
+  @IsOptional()
+  @IsString()
+  promo_code?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  campaign_ids?: string[];
+
+  @IsOptional()
+  @IsArray()
+  free_gifts?: any[];
+
   @IsNumber()
   total!: number;
 

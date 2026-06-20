@@ -26,6 +26,7 @@ export class ProductsService {
       orderBy: { created_at: 'desc' },
       include: {
         media: { orderBy: { is_primary: 'desc' } },
+        variants: true,
       },
     });
   }
@@ -362,6 +363,8 @@ export class ProductsService {
         customer_name: dto.customer_name,
         customer_image_url: dto.customer_image_url,
         comment: dto.comment,
+        rating: dto.rating,
+        status: dto.status ?? 'active',
         image_urls: dto.image_urls ?? [],
         video_urls: dto.video_urls ?? [],
       } as any,
@@ -418,7 +421,7 @@ export class ProductsService {
     });
   }
 
-  async updateReview(reviewId: string, dto: { status?: string; comment?: string }) {
+  async updateReview(reviewId: string, dto: { status?: string; comment?: string; customer_name?: string; customer_image_url?: string; rating?: number }) {
     const review = await this.prisma.productReview.findUnique({ where: { id: reviewId } as any });
     if (!review) throw new NotFoundException(`Review ${reviewId} not found`);
     return this.prisma.productReview.update({ where: { id: reviewId } as any, data: dto as any });

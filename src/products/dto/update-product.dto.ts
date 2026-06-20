@@ -62,4 +62,16 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  material?: string;
+
+  @IsOptional()
+  @IsString()
+  meta_title?: string;
+
+  @IsOptional()
+  @IsString()
+  meta_description?: string;
 }

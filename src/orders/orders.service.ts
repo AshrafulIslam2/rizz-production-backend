@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CampaignsService } from '../campaigns/campaigns.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly campaignsService: CampaignsService,
+  ) {}
 
   private async generateOrderNumber(): Promise<string> {
     const count = await this.prisma.order.count();
@@ -29,7 +33,7 @@ export class OrdersService {
 
   async create(dto: CreateOrderDto) {
     const order_number = await this.generateOrderNumber();
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         order_number,
         customer_name: dto.customer_name,
@@ -41,11 +45,21 @@ export class OrdersService {
         items: dto.items,
         subtotal: dto.subtotal,
         shipping_fee: dto.shipping_fee ?? 0,
+        discount_amount: dto.discount_amount ?? 0,
+        promo_code: dto.promo_code,
+        campaign_ids: dto.campaign_ids ?? [],
+        free_gifts: dto.free_gifts ?? undefined,
         total: dto.total,
         payment_method: dto.payment_method ?? 'COD',
         notes: dto.notes,
-      } as any,
+      },
     });
+
+    if (dto.campaign_ids && dto.campaign_ids.length > 0) {
+      await this.campaignsService.registerUsage(dto.campaign_ids);
+    }
+
+    return order;
   }
 
   async updateStatus(id: string, status: string) {

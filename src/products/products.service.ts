@@ -27,6 +27,7 @@ export class ProductsService {
       include: {
         media: { orderBy: { is_primary: 'desc' } },
         variants: true,
+        category: true,
       },
     });
   }
@@ -42,6 +43,7 @@ export class ProductsService {
         translations: true,
         faqs: true,
         reviews: true,
+        category: true,
       },
     });
 

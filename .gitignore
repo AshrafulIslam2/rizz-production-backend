@@ -8,4 +8,4 @@ dist
 .env.test
 .prisma
 secrets
-uploads
+!src/uploads/

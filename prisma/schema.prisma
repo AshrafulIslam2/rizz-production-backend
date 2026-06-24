@@ -211,6 +211,9 @@ model Product {
   how_to_use        String?
   benefits          String[]
   problem_solved    String?
+  specs             String?
+  craftsmanship     String?
+  free_delivery     Boolean       @default(false)
   brand_id          String        @default("")
   category_id       String?
   category          Category?     @relation(fields: [category_id], references: [id], onDelete: Restrict)
@@ -353,11 +356,13 @@ model ProductFaq {
   product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
   question   String
   answer     String
+  lang_code  String  @default("en")
   order      Int     @default(0)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@index([product_id, order])
+  @@index([product_id, lang_code])
 }
 
 model ProductReview {
@@ -463,6 +468,7 @@ model Order {
   order_number    String   @unique
   customer_name   String
   customer_phone  String
+  customer_email  String?
   division        String?
   district        String?
   area            String?
@@ -489,6 +495,32 @@ model Setting {
   key        String   @id
   value      Json
   updated_at DateTime @updatedAt
+}
+
+model CheckoutLead {
+  id           String   @id @default(cuid())
+  name         String?
+  phone        String
+  email        String?
+  cart_total   Float?
+  source       String   @default("checkout")
+  company_name String?
+  status       String   @default("new")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([phone])
+  @@index([status])
+}
+
+model ProductView {
+  id         String   @id @default(cuid())
+  product_id String
+  session_id String
+  last_seen  DateTime @updatedAt
+
+  @@unique([product_id, session_id])
+  @@index([product_id, last_seen])
 }
 
 model Campaign {

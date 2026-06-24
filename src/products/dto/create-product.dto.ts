@@ -153,6 +153,10 @@ export class CreateProductFaqDto {
   @IsOptional()
   @IsInt()
   order?: number;
+
+  @IsOptional()
+  @IsString()
+  lang_code?: string;
 }
 
 export class CreateProductReviewDto {

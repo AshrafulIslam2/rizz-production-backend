@@ -204,6 +204,9 @@ export class ProductsService {
         how_to_use: mergeNullable(dto.how_to_use, existing.how_to_use),
         benefits: mergeRequired(dto.benefits, existing.benefits),
         problem_solved: mergeNullable(dto.problem_solved, existing.problem_solved),
+        specs: mergeNullable(dto.specs, existing.specs),
+        craftsmanship: mergeNullable(dto.craftsmanship, existing.craftsmanship),
+        free_delivery: mergeRequired(dto.free_delivery, existing.free_delivery),
         brand_id: mergeRequired(dto.brand_id, existing.brand_id),
         category_id: mergeRequired(dto.category_id, existing.category_id),
         status: mergeRequired(dto.status, existing.status),
@@ -314,6 +317,14 @@ export class ProductsService {
     });
   }
 
+  async getTranslations(productId: string) {
+    await this.ensureProductExists(productId);
+    return this.prisma.productTranslation.findMany({
+      where: { product_id: productId } as any,
+      orderBy: { lang_code: 'asc' },
+    });
+  }
+
   async createTranslation(productId: string, dto: CreateProductTranslationDto) {
     await this.ensureProductExists(productId);
 
@@ -321,6 +332,30 @@ export class ProductsService {
       data: {
         product_id: productId,
         lang_code: dto.lang_code,
+        name: dto.name,
+        short_description: dto.short_description,
+        description: dto.description,
+        seo_title: dto.seo_title,
+        seo_description: dto.seo_description,
+      } as any,
+    });
+  }
+
+  async upsertTranslation(productId: string, lang: string, dto: Omit<CreateProductTranslationDto, 'lang_code'>) {
+    await this.ensureProductExists(productId);
+
+    return this.prisma.productTranslation.upsert({
+      where: { product_id_lang_code: { product_id: productId, lang_code: lang } } as any,
+      create: {
+        product_id: productId,
+        lang_code: lang,
+        name: dto.name,
+        short_description: dto.short_description,
+        description: dto.description,
+        seo_title: dto.seo_title,
+        seo_description: dto.seo_description,
+      } as any,
+      update: {
         name: dto.name,
         short_description: dto.short_description,
         description: dto.description,
@@ -339,6 +374,7 @@ export class ProductsService {
         question: dto.question,
         answer: dto.answer,
         order: dto.order ?? 0,
+        lang_code: dto.lang_code ?? 'en',
       } as any,
     });
   }

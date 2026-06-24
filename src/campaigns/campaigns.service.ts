@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DeliverySettingsService } from '../delivery-settings/delivery-settings.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { CalculateCartDto } from './dto/calculate-cart.dto';
 
 @Injectable()
 export class CampaignsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly deliverySettings: DeliverySettingsService,
+  ) {}
 
   findAll() {
     return this.prisma.campaign.findMany({ orderBy: { created_at: 'desc' } });
@@ -108,7 +112,20 @@ export class CampaignsService {
   async calculateCart(dto: CalculateCartDto) {
     const now = new Date();
     const subtotal = dto.items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const baseShipping = dto.shipping_fee ?? 0;
+
+    const deliverySettings = await this.deliverySettings.get();
+    const baseShipping = deliverySettings.flat_fee;
+
+    let freeShipping = deliverySettings.free_delivery_global;
+
+    const productIds = dto.items.map((i) => i.product_id).filter(Boolean);
+    if (!freeShipping && productIds.length > 0) {
+      const freeDeliveryProduct = await this.prisma.product.findFirst({
+        where: { id: { in: productIds }, free_delivery: true },
+        select: { id: true },
+      });
+      if (freeDeliveryProduct) freeShipping = true;
+    }
 
     const autoCampaigns = await this.prisma.campaign.findMany({
       where: { is_active: true, requires_code: false },
@@ -134,7 +151,6 @@ export class CampaignsService {
     }
 
     let discountAmount = 0;
-    let freeShipping = false;
     const giftProductIds = new Set<string>();
     const appliedCampaigns: { id: string; name: string; code: string | null }[] = [];
 

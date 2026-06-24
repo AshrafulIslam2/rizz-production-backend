@@ -12,4 +12,8 @@ export class UpdateFaqDto {
   @IsOptional()
   @IsInt()
   order?: number;
+
+  @IsOptional()
+  @IsString()
+  lang_code?: string;
 }

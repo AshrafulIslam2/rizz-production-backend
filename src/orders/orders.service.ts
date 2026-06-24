@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignsService } from '../campaigns/campaigns.service';
+import { CheckoutLeadsService } from '../checkout-leads/checkout-leads.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly campaignsService: CampaignsService,
+    private readonly checkoutLeadsService: CheckoutLeadsService,
   ) {}
 
   private async generateOrderNumber(): Promise<string> {
@@ -38,6 +40,7 @@ export class OrdersService {
         order_number,
         customer_name: dto.customer_name,
         customer_phone: dto.customer_phone,
+        customer_email: dto.customer_email,
         division: dto.division,
         district: dto.district,
         area: dto.area,
@@ -58,6 +61,8 @@ export class OrdersService {
     if (dto.campaign_ids && dto.campaign_ids.length > 0) {
       await this.campaignsService.registerUsage(dto.campaign_ids);
     }
+
+    await this.checkoutLeadsService.markConvertedByPhone(dto.customer_phone);
 
     return order;
   }

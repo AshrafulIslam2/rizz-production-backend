@@ -155,12 +155,26 @@ export class ProductsController {
   }
 
   // Translations
+  @Get(':productId/translations')
+  getTranslations(@Param('productId') productId: string) {
+    return this.productsService.getTranslations(productId);
+  }
+
   @Post(':productId/translations')
   createTranslation(
     @Param('productId') productId: string,
     @Body() dto: CreateProductTranslationDto,
   ) {
     return this.productsService.createTranslation(productId, dto);
+  }
+
+  @Patch(':productId/translations/:lang')
+  upsertTranslation(
+    @Param('productId') productId: string,
+    @Param('lang') lang: string,
+    @Body() dto: CreateProductTranslationDto,
+  ) {
+    return this.productsService.upsertTranslation(productId, lang, dto);
   }
 
   // FAQs

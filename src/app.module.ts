@@ -15,6 +15,9 @@ import { PoliciesModule } from './policies/policies.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { SeoModule } from './seo/seo.module';
+import { CheckoutLeadsModule } from './checkout-leads/checkout-leads.module';
+import { ProductViewsModule } from './product-views/product-views.module';
+import { DeliverySettingsModule } from './delivery-settings/delivery-settings.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { SeoModule } from './seo/seo.module';
     CampaignsModule,
     UploadsModule,
     SeoModule,
+    CheckoutLeadsModule,
+    ProductViewsModule,
+    DeliverySettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

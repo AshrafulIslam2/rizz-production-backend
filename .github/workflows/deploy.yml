@@ -18,5 +18,7 @@ jobs:
             cd /var/www/rizz-backend
             git pull origin main
             npm install
+            npx prisma db push --accept-data-loss
+            npx prisma generate
             npm run build
             pm2 restart rizz-backend

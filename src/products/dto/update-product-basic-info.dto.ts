@@ -64,6 +64,18 @@ export class UpdateProductBasicInfoDto {
 
   @IsOptional()
   @IsString()
+  specs?: string | null;
+
+  @IsOptional()
+  @IsString()
+  craftsmanship?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  free_delivery?: boolean;
+
+  @IsOptional()
+  @IsString()
   problem_solved?: string | null;
 
   @IsOptional()

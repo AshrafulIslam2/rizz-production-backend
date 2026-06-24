@@ -9,6 +9,10 @@ export class CreateOrderDto {
 
   @IsOptional()
   @IsString()
+  customer_email?: string;
+
+  @IsOptional()
+  @IsString()
   division?: string;
 
   @IsOptional()

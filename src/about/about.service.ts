@@ -25,6 +25,12 @@ const DEFAULT = {
   ],
   quoteText: 'Every pair that leaves our workshop carries a piece of Chittagong with it.',
   quoteAuthor: 'The Rizz Atelier',
+  faq: [
+    { q: 'Where are RIZZ products made?', a: 'All RIZZ products are handcrafted in Chittagong, Bangladesh — in our own workshop by our own craftsmen.' },
+    { q: 'Is the leather genuine?', a: 'Yes. We use only genuine leather — full-grain, vegetable-tanned, suede, or embossed calfskin. No synthetic or bonded leather.' },
+    { q: 'Do you offer a warranty?', a: 'Yes. All products come with a one-year craftsmanship warranty covering stitching, hardware, and structural defects.' },
+    { q: 'Can I visit the workshop?', a: 'We welcome visits by appointment. Contact us via WhatsApp or email to arrange a visit to our Chittagong atelier.' },
+  ],
 };
 
 @Injectable()

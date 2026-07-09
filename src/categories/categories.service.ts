@@ -84,7 +84,7 @@ export class CategoriesService {
       seo_title: dto.seo_title ?? existing.seo_title,
       seo_description: dto.seo_description ?? existing.seo_description,
       page_intro: dto.page_intro ?? existing.page_intro,
-      extra_faq: dto.extra_faq ?? existing.extra_faq,
+      extra_faq: dto.extra_faq !== undefined ? dto.extra_faq : (existing.extra_faq ?? []),
       order: dto.order ?? existing.order,
     }});
   }

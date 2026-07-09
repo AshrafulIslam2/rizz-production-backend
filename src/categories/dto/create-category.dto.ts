@@ -44,6 +44,13 @@ export class CreateCategoryDto {
   seo_description?: string;
 
   @IsOptional()
+  @IsString()
+  page_intro?: string;
+
+  @IsOptional()
+  extra_faq?: { q: string; a: string }[];
+
+  @IsOptional()
   @IsInt()
   order?: number;
 }

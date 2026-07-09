@@ -190,6 +190,8 @@ model Category {
   banner_image    String?
   seo_title       String?
   seo_description String?
+  page_intro      String?
+  extra_faq       Json?
   order           Int        @default(0)
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt

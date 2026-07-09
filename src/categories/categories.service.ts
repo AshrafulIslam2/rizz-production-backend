@@ -34,6 +34,8 @@ export class CategoriesService {
         banner_image: dto.banner_image,
         seo_title: dto.seo_title,
         seo_description: dto.seo_description,
+        page_intro: dto.page_intro,
+        extra_faq: dto.extra_faq ?? [],
         order: dto.order ?? 0,
       },
     });
@@ -57,6 +59,8 @@ export class CategoriesService {
       banner_image: dto.banner_image ?? existing.banner_image,
       seo_title: dto.seo_title,
       seo_description: dto.seo_description,
+      page_intro: dto.page_intro,
+      extra_faq: dto.extra_faq ?? [],
       order: dto.order ?? existing.order,
     }});
   }
@@ -79,6 +83,8 @@ export class CategoriesService {
       banner_image: dto.banner_image ?? existing.banner_image,
       seo_title: dto.seo_title ?? existing.seo_title,
       seo_description: dto.seo_description ?? existing.seo_description,
+      page_intro: dto.page_intro ?? existing.page_intro,
+      extra_faq: dto.extra_faq ?? existing.extra_faq,
       order: dto.order ?? existing.order,
     }});
   }

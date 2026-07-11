@@ -549,3 +549,22 @@ model Campaign {
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 }
+
+model BlogPost {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  description  String?
+  category     String    @default("General")
+  reading_time Int       @default(5)
+  cover_image  String?
+  cover_alt    String?
+  body         Json      @default("[]")
+  is_published Boolean   @default(false)
+  published_at DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@index([is_published])
+  @@index([slug])
+}

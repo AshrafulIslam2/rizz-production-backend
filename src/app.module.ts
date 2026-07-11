@@ -19,11 +19,13 @@ import { CheckoutLeadsModule } from './checkout-leads/checkout-leads.module';
 import { ProductViewsModule } from './product-views/product-views.module';
 import { DeliverySettingsModule } from './delivery-settings/delivery-settings.module';
 import { AboutModule } from './about/about.module';
+import { BlogPostsModule } from './blog-posts/blog-posts.module';
 
 @Module({
   imports: [
     PrismaModule,
     AboutModule,
+    BlogPostsModule,
     PagesModule,
     HeroModule,
     FaqModule,

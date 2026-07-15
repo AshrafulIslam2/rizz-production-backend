@@ -103,6 +103,59 @@ export class OrdersService {
     });
   }
 
+  async getProfitStats() {
+    const orders = await this.prisma.order.findMany({
+      where: { status: 'delivered' },
+    });
+
+    // Build variant lookup: slug+size+color → production_price
+    const products = await this.prisma.product.findMany({
+      select: {
+        slug: true,
+        variants: { select: { attributes: true, production_price: true, price: true } },
+      },
+    });
+
+    const variantMap = new Map<string, number>();
+    for (const product of products as any[]) {
+      for (const v of product.variants ?? []) {
+        const size = String((v.attributes as any)?.size ?? '');
+        const color = String((v.attributes as any)?.color ?? '');
+        const key = `${product.slug}|${size}|${color}`;
+        if (v.production_price != null) {
+          variantMap.set(key, v.production_price);
+        }
+      }
+    }
+
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let itemsWithCost = 0;
+
+    for (const order of orders) {
+      totalRevenue += order.total ?? 0;
+      const items: any[] = Array.isArray(order.items) ? order.items : [];
+      for (const item of items) {
+        const qty = Number(item?.quantity) || 1;
+        const key = `${item?.slug}|${String(item?.size ?? '')}|${String(item?.color ?? '')}`;
+        const prodCost = variantMap.get(key);
+        if (prodCost != null) {
+          totalCost += prodCost * qty;
+          itemsWithCost += qty;
+        }
+      }
+    }
+
+    const totalProfit = totalRevenue - totalCost;
+    return {
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      deliveredOrders: orders.length,
+      itemsWithCost,
+    };
+  }
+
   async updateStatus(id: string, status: string) {
     const order = await this.prisma.order.findUnique({ where: { id } as any });
     if (!order) throw new NotFoundException(`Order ${id} not found`);

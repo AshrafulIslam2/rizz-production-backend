@@ -257,17 +257,19 @@ model ProductVariant {
   product      Product       @relation(fields: [product_id], references: [id], onDelete: Cascade)
   sku          String        @unique
   variant_name String
-  price        Float
-  sale_price   Float?
-  stock_qty    Int           @default(0)
+  price            Float
+  sale_price       Float?
+  production_price Float?
+  stock_qty        Int           @default(0)
   attributes   Json
   barcode      String?
   is_default   Boolean       @default(false)
   status       ProductStatus @default(DRAFT)
-  images       ProductImage[]
-  media        ProductMedia[]
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
+  images             ProductImage[]
+  media              ProductMedia[]
+  inventory_movements InventoryMovement[]
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
 
   @@index([product_id])
   @@index([status, is_default])
@@ -567,4 +569,123 @@ model BlogPost {
 
   @@index([is_published])
   @@index([slug])
+}
+
+// ─── Inventory ────────────────────────────────────────────────────────────────
+
+enum MovementType {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  DAMAGE
+  SALE
+  RETURN
+}
+
+model InventoryMovement {
+  id         String         @id @default(cuid())
+  variant_id String
+  variant    ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+  type       MovementType
+  quantity   Int
+  before_qty Int
+  after_qty  Int
+  reference  String?
+  note       String?
+  created_at DateTime       @default(now())
+
+  @@index([variant_id])
+  @@index([type])
+  @@index([created_at])
+}
+
+// ─── Suppliers & Purchase Orders ──────────────────────────────────────────────
+
+model Supplier {
+  id              String          @id @default(cuid())
+  name            String
+  phone           String?
+  email           String?
+  address         String?
+  note            String?
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  purchase_orders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id          String    @id @default(cuid())
+  po_number   String    @unique
+  supplier_id String?
+  supplier    Supplier? @relation(fields: [supplier_id], references: [id])
+  status      String    @default("pending")
+  items       Json
+  total_cost  Float
+  note        String?
+  received_at DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@index([status])
+  @@index([supplier_id])
+}
+
+// ─── POS Transactions ─────────────────────────────────────────────────────────
+
+model PosTransaction {
+  id              String   @id @default(cuid())
+  tx_number       String   @unique
+  customer_name   String?
+  customer_phone  String?
+  items           Json
+  subtotal        Float
+  discount_amount Float    @default(0)
+  discount_type   String   @default("flat")
+  total           Float
+  payment_cash    Float    @default(0)
+  payment_card    Float    @default(0)
+  payment_mobile  Float    @default(0)
+  status          String   @default("completed")
+  note            String?
+  created_at      DateTime @default(now())
+
+  @@index([status])
+  @@index([customer_phone])
+  @@index([created_at])
+}
+
+// ─── Returns & Exchanges ──────────────────────────────────────────────────────
+
+model ReturnExchange {
+  id             String   @id @default(cuid())
+  ref_number     String   @unique
+  type           String
+  original_tx    String?
+  customer_name  String?
+  customer_phone String?
+  items          Json
+  exchange_items Json?
+  refund_amount  Float    @default(0)
+  status         String   @default("pending")
+  note           String?
+  created_at     DateTime @default(now())
+
+  @@index([status])
+  @@index([type])
+}
+
+// ─── CRM Customers ────────────────────────────────────────────────────────────
+
+model CrmCustomer {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @unique
+  email        String?
+  address      String?
+  total_spend  Float    @default(0)
+  total_orders Int      @default(0)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([phone])
 }

@@ -20,6 +20,13 @@ import { ProductViewsModule } from './product-views/product-views.module';
 import { DeliverySettingsModule } from './delivery-settings/delivery-settings.module';
 import { AboutModule } from './about/about.module';
 import { BlogPostsModule } from './blog-posts/blog-posts.module';
+import { StatsModule } from './stats/stats.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { PosModule } from './pos/pos.module';
+import { ReturnsModule } from './returns/returns.module';
+import { CrmCustomersModule } from './crm-customers/crm-customers.module';
 
 @Module({
   imports: [
@@ -42,6 +49,13 @@ import { BlogPostsModule } from './blog-posts/blog-posts.module';
     CheckoutLeadsModule,
     ProductViewsModule,
     DeliverySettingsModule,
+    StatsModule,
+    InventoryModule,
+    SuppliersModule,
+    PurchaseOrdersModule,
+    PosModule,
+    ReturnsModule,
+    CrmCustomersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

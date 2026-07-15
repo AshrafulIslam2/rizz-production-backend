@@ -23,6 +23,10 @@ export class UpdateVariantDto {
   sale_price?: number;
 
   @IsOptional()
+  @IsNumber()
+  production_price?: number;
+
+  @IsOptional()
   @IsInt()
   stock_qty?: number;
 

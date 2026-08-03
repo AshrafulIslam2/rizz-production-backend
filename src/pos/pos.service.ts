@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
 export class PosService {
+  private readonly logger = new Logger(PosService.name);
   constructor(private readonly prisma: PrismaService, private readonly inventory: InventoryService) {}
 
   private async genTxNumber() {
@@ -24,11 +25,32 @@ export class PosService {
   async create(dto: any) {
     const tx_number = await this.genTxNumber();
     const items: any[] = Array.isArray(dto.items) ? dto.items : [];
+
+    // Stock validation before creating transaction
+    if (dto.status !== 'draft') {
+      for (const item of items) {
+        if (!item.variant_id || item.qty <= 0) continue;
+        const variant = await this.prisma.productVariant.findUnique({ where: { id: item.variant_id } });
+        if (!variant) throw new BadRequestException(`Variant not found: ${item.variant_id}`);
+        if (variant.stock_qty < item.qty) {
+          throw new BadRequestException(
+            `Insufficient stock for "${item.name}". Available: ${variant.stock_qty}, requested: ${item.qty}`
+          );
+        }
+      }
+    }
+
     const tx = await this.prisma.posTransaction.create({ data: { ...dto, tx_number } });
     if (dto.status !== 'draft') {
       for (const item of items) {
         if (item.variant_id && item.qty > 0) {
-          await this.inventory.recordMovement(item.variant_id, 'SALE', item.qty, tx_number, 'POS sale');
+          try {
+            await this.inventory.recordMovement(item.variant_id, 'SALE', item.qty, tx_number, 'POS sale');
+            this.logger.log(`Stock deducted: variant=${item.variant_id} qty=${item.qty} tx=${tx_number}`);
+          } catch (err) {
+            this.logger.error(`Failed to deduct stock for variant ${item.variant_id}: ${(err as any)?.message ?? err}`);
+            throw err;
+          }
         }
       }
     }

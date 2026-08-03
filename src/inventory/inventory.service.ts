@@ -9,22 +9,22 @@ export class InventoryService {
 
   async recordMovement(variantId: string, type: MoveType, quantity: number, reference?: string, note?: string) {
     const variant = await this.prisma.productVariant.findUnique({ where: { id: variantId } });
-    if (!variant) throw new NotFoundException('Variant not found');
+    if (!variant) throw new NotFoundException(`Variant not found: ${variantId}`);
     const before_qty = variant.stock_qty;
     const delta = ['STOCK_OUT', 'DAMAGE', 'SALE'].includes(type) ? -Math.abs(quantity) : Math.abs(quantity);
     const after_qty = type === 'ADJUSTMENT' ? quantity : Math.max(0, before_qty + delta);
     const actualDelta = after_qty - before_qty;
 
-    const [movement] = await this.prisma.$transaction([
-      this.prisma.inventoryMovement.create({
+    return this.prisma.$transaction(async (tx) => {
+      const movement = await tx.inventoryMovement.create({
         data: { variant_id: variantId, type: type as any, quantity: Math.abs(actualDelta), before_qty, after_qty, reference, note },
-      }),
-      this.prisma.productVariant.update({
+      });
+      await tx.productVariant.update({
         where: { id: variantId },
         data: { stock_qty: after_qty },
-      }),
-    ]);
-    return movement;
+      });
+      return movement;
+    });
   }
 
   async getHistory(variantId?: string, type?: string, limit = 50) {

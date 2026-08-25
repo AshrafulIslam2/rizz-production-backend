@@ -27,6 +27,7 @@ import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { PosModule } from './pos/pos.module';
 import { ReturnsModule } from './returns/returns.module';
 import { CrmCustomersModule } from './crm-customers/crm-customers.module';
+import { VariantOptionsModule } from './variant-options/variant-options.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { CrmCustomersModule } from './crm-customers/crm-customers.module';
     PosModule,
     ReturnsModule,
     CrmCustomersModule,
+    VariantOptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

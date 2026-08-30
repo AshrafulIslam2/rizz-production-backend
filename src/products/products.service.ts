@@ -21,8 +21,27 @@ import { UpdateMediaDto } from './dto/update-media.dto';
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
+  /**
+   * @param visibility  'public' returns only what a customer may see: status
+   *                    ACTIVE *and* is_published true. Omitting it returns
+   *                    everything.
+   *
+   * The admin panel calls this WITHOUT the flag on purpose — it is the tool
+   * for managing drafts, so it must keep seeing them. Only the storefront
+   * asks for 'public'.
+   *
+   * Before this parameter existed the method had no filter at all: setting a
+   * product to Draft in the admin saved correctly, but the storefront was
+   * still handed every row, so the product stayed visible to customers.
+   */
+  async findAll(visibility?: string) {
+    const where =
+      visibility === 'public'
+        ? { status: 'ACTIVE', is_published: true }
+        : {};
+
     return this.prisma.product.findMany({
+      where: where as any,
       orderBy: { created_at: 'desc' },
       include: {
         media: { orderBy: { is_primary: 'desc' } },

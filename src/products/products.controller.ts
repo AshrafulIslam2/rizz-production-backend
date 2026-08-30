@@ -37,9 +37,10 @@ export class ProductsController {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  /** `?visibility=public` restricts the list to ACTIVE + published products. */
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query('visibility') visibility?: string) {
+    return this.productsService.findAll(visibility);
   }
 
   @Get(':productId')

@@ -689,3 +689,125 @@ model CrmCustomer {
 
   @@index([phone])
 }
+
+// ─── Production Costing (Wholesale + Retail) ──────────────────────────────────
+
+/// Which part of the costing form a field belongs to.
+enum CostSection {
+  UPPER           // Tab 2 — upper materials, entered per dozen
+  SOLE            // Tab 3 — sole materials, entered per dozen
+  FACTORY         // Tab 4 — labour + factory overhead, entered per dozen
+  RETAIL_COMMON   // Monthly shop expenses, divided by expected monthly sales
+  RETAIL_PRODUCT  // Per-product retail extras (box, bag), already per pair
+}
+
+/// How the amount typed into a field should be interpreted.
+///
+/// Needed because one costing form mixes three kinds of money: materials
+/// bought by the dozen, shop and factory bills that arrive monthly, and
+/// per-pair extras like a gift box. Storing the basis per field means the admin decides, instead of
+/// the code guessing.
+enum CostBasis {
+  PER_DOZEN /// Amount already covers one dozen pairs. Used as-is.
+  PER_PAIR  /// Amount is for a single pair. Used as-is (retail extras).
+  PER_MONTH /// Monthly bill. Divided by monthly output to reach a per-unit cost.
+}
+
+/// How a field's cost is worked out from its inputs.
+///
+/// Four reusable calculators cover every footwear material we cost, so adding
+/// a new material later means picking a calculator rather than writing a new
+/// formula.
+enum CostCalculator {
+  DIRECT   /// A plain per-dozen amount typed straight in.
+  SQFT     /// used sq.ft x cost per sq.ft  (leather, lining)
+  UNIT     /// quantity x cost per unit     (foam, cover, goj/yard items)
+  SHEET    /// (sheet price / pairs per sheet) x 12  (texon, SRS, EVA, soles)
+  CHEMICAL /// (container price / container qty) x used per dozen
+}
+
+/// A single user-managed costing field.
+///
+/// The whole costing form is driven by these rows rather than hardcoded
+/// inputs, so fields can be added, renamed, reordered, disabled or archived
+/// from the admin without a code change. `key` is the stable identifier used
+/// inside ProductCosting.values — renaming the label never breaks saved data.
+model CostFieldDefinition {
+  id          String      @id @default(cuid())
+  section     CostSection
+  basis       CostBasis   @default(PER_DOZEN)
+  calculator  CostCalculator @default(DIRECT)
+  /// Sub-tab within the section, e.g. "materials", "insole", "chemicals".
+  /// Null groups render before the tabs.
+  group       String?
+  /// Shown only when its group is switched to this mode ("HANDMADE" /
+  /// "READYMADE"). Null means always shown.
+  mode        String?
+  key         String      @unique
+  label       String
+  /// Optional hint shown under the input.
+  help_text   String?
+  sort_order  Int         @default(0)
+  /// false = hidden from the form but existing values are kept.
+  is_active   Boolean     @default(true)
+  /// Archived fields stay out of the form and out of new totals.
+  is_archived Boolean     @default(false)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  @@index([section, sort_order])
+  @@index([is_active, is_archived])
+}
+
+/// One costing record per product.
+///
+/// `values` maps CostFieldDefinition.key -> amount. Everything in UPPER, SOLE
+/// and FACTORY is entered PER DOZEN (1 dozen = 12 pairs); RETAIL_PRODUCT
+/// entries are per pair. The derived figures below are recomputed on every
+/// save so the production list can be rendered without re-running the maths
+/// for each row.
+model ProductCosting {
+  id           String  @id @default(cuid())
+  /// Optional link to the catalog product this costing belongs to.
+  product_id   String?
+  product_name String
+  product_code String?
+  category     String?
+  image_url    String?
+  entry_date   DateTime @default(now())
+
+  /// fieldKey -> amount. Missing key means the admin left it blank (= 0).
+  values Json @default("{}")
+
+  /// Dozens produced per month, used to spread factory overhead.
+  monthly_production Float @default(0)
+
+  wholesale_profit_pct Float @default(0)
+  retail_profit_pct    Float @default(0)
+
+  /// Snapshot of the retail common cost per pair at save time, so an old
+  /// costing record keeps the numbers it was actually saved with even after
+  /// the shop's monthly expenses change.
+  retail_common_cost_pair Float @default(0)
+
+  // ── Derived (recomputed server-side on every write) ──
+  upper_cost_dozen       Float @default(0)
+  sole_cost_dozen        Float @default(0)
+  factory_cost_dozen     Float @default(0)
+  production_cost_dozen  Float @default(0)
+  production_cost_pair   Float @default(0)
+  wholesale_profit_pair  Float @default(0)
+  wholesale_price_pair   Float @default(0)
+  wholesale_price_dozen  Float @default(0)
+  retail_product_cost_pair Float @default(0)
+  retail_cost_pair       Float @default(0)
+  retail_profit_pair     Float @default(0)
+  retail_price_pair      Float @default(0)
+  retail_price_dozen     Float @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([product_id])
+  @@index([updated_at])
+}

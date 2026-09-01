@@ -28,6 +28,7 @@ import { PosModule } from './pos/pos.module';
 import { ReturnsModule } from './returns/returns.module';
 import { CrmCustomersModule } from './crm-customers/crm-customers.module';
 import { VariantOptionsModule } from './variant-options/variant-options.module';
+import { CostingModule } from './costing/costing.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { VariantOptionsModule } from './variant-options/variant-options.module';
     ReturnsModule,
     CrmCustomersModule,
     VariantOptionsModule,
+    CostingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

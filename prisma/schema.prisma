@@ -779,8 +779,20 @@ model ProductCosting {
   /// fieldKey -> amount. Missing key means the admin left it blank (= 0).
   values Json @default("{}")
 
-  /// Dozens produced per month, used to spread factory overhead.
+  /// Pairs this design yields in a month if the factory ran nothing else.
+  ///
+  /// This is a STANDARD, set once per design and edited only when efficiency
+  /// really changes — not an actual monthly output figure to be re-entered.
+  /// It is what the shop-wide factory bills are divided by, so a slow design
+  /// automatically carries more overhead per pair than an easy one.
+  standard_capacity_pairs Float @default(0)
+
+  /// The same capacity in dozens. Derived on save; kept for older readers.
   monthly_production Float @default(0)
+
+  /// Snapshot of the shop-wide monthly factory pool used at save time, so the
+  /// stored per-dozen figures can always be traced back to a total.
+  factory_monthly_total Float @default(0)
 
   wholesale_profit_pct Float @default(0)
   retail_profit_pct    Float @default(0)

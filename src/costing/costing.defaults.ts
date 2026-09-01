@@ -92,16 +92,26 @@ export const DEFAULT_COST_FIELDS: SeedField[] = [
   ...chemicalFields('SOLE', 'sole'),
 
   // ══ FACTORY ════════════════════════════════════════════════════════════
-  // Labour is priced per dozen; building bills arrive monthly and are spread
-  // across the month's output.
-  { key: 'factory_labour', label: 'Factory Labour', section: 'FACTORY', basis: 'PER_DOZEN', calculator: 'DIRECT' },
-  { key: 'factory_rent', label: 'Factory Rent', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT', help_text: 'Monthly bill — divided by monthly production' },
-  { key: 'factory_electricity', label: 'Electricity', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT', help_text: 'Monthly bill — divided by monthly production' },
+  //
+  // PER_MONTH here means a shop-wide bill entered once in Factory Cost
+  // Settings, never against a product. Each costing then carries a share of
+  // the pool worked out from its own standard capacity, because the same
+  // eight workers turn out far fewer pairs of a difficult design than an easy
+  // one — and that difference IS the labour cost.
+  //
+  // PER_DOZEN here means a cost that genuinely belongs to the product.
+  { key: 'factory_labour', label: 'Total Production Worker Salary', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT', help_text: 'Everyone on the production floor, for a full month' },
+  { key: 'factory_rent', label: 'Factory Rent', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
+  { key: 'factory_electricity', label: 'Electricity', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
+  { key: 'factory_staff_welfare', label: 'Staff Snacks / Welfare', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
   { key: 'factory_machine_maintenance', label: 'Machinery Maintenance', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
   { key: 'factory_machine_depreciation', label: 'Machinery Depreciation', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
+  { key: 'factory_internet', label: 'Internet / Telephone', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
+  { key: 'factory_other', label: 'Other Monthly Factory Expenses', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
+
+  // Product's own factory costs — these really do change design to design.
   { key: 'factory_packaging', label: 'Factory Packaging', section: 'FACTORY', basis: 'PER_DOZEN', calculator: 'DIRECT' },
   { key: 'factory_transport', label: 'Factory Transport', section: 'FACTORY', basis: 'PER_DOZEN', calculator: 'DIRECT' },
-  { key: 'factory_other', label: 'Other Factory Expenses', section: 'FACTORY', basis: 'PER_MONTH', calculator: 'DIRECT' },
 
   // ══ RETAIL COMMON (monthly shop expenses) ══════════════════════════════
   { key: 'retail_shop_rent', label: 'Shop Rent', section: 'RETAIL_COMMON', basis: 'PER_MONTH', calculator: 'DIRECT' },
@@ -134,8 +144,12 @@ export const DEFAULT_COST_FIELDS: SeedField[] = [
 /** Key of the Setting row remembering which seed version has been applied. */
 export const FIELD_SEED_VERSION_KEY = 'cost_fields_seed_version';
 
-/** 1 = flat Upper/Sole list. 2 = structured groups with calculators. */
-export const FIELD_SEED_VERSION = 2;
+/**
+ * 1 = flat Upper/Sole list.
+ * 2 = structured groups with calculators.
+ * 3 = factory bills moved to a shop-wide monthly pool.
+ */
+export const FIELD_SEED_VERSION = 3;
 
 /** Every Upper/Sole key the v1 seed created. */
 export const V1_UPPER_SOLE_KEYS: string[] = [
@@ -176,6 +190,9 @@ export const V1_SEED_LABELS: Record<string, string> = {
   upper_other: 'Other Upper Cost',
   sole_eva: 'EVA',
   sole_texon: 'Texon',
+  // v3 renames these two as it moves them onto a monthly basis.
+  factory_labour: 'Factory Labour',
+  factory_other: 'Other Factory Expenses',
 };
 
 /** Key of the Setting row holding shop-wide retail costing settings. */
@@ -191,4 +208,23 @@ export type RetailCostSettings = {
 export const DEFAULT_RETAIL_SETTINGS: RetailCostSettings = {
   monthly: {},
   expected_monthly_sales_pairs: 0,
+};
+
+/** Key of the Setting row holding shop-wide monthly factory expenses. */
+export const FACTORY_SETTINGS_KEY = 'factory_cost_settings';
+
+/**
+ * The factory's monthly bills, entered once.
+ *
+ * There is deliberately no expected-output figure here to divide by — unlike
+ * the retail pool, this one is shared out per product, using each design's own
+ * standard capacity.
+ */
+export type FactoryCostSettings = {
+  /** fieldKey -> monthly amount for FACTORY fields on a PER_MONTH basis. */
+  monthly: Record<string, number>;
+};
+
+export const DEFAULT_FACTORY_SETTINGS: FactoryCostSettings = {
+  monthly: {},
 };

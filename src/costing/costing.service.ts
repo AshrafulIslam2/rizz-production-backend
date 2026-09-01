@@ -2,15 +2,21 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import {
   calcCosting,
+  calcFactoryAllocation,
+  calcFactoryMonthlyTotal,
   calcRetailCommonCostPerPair,
   mergeCostValues,
   money,
   num,
+  PAIRS_PER_DOZEN,
   CostFieldLike,
 } from './costing.calc';
 import {
   DEFAULT_COST_FIELDS,
+  DEFAULT_FACTORY_SETTINGS,
   DEFAULT_RETAIL_SETTINGS,
+  FACTORY_SETTINGS_KEY,
+  FactoryCostSettings,
   FIELD_SEED_VERSION,
   FIELD_SEED_VERSION_KEY,
   V1_SEED_LABELS,
@@ -241,6 +247,54 @@ export class CostingService {
     });
   }
 
+  // ── Factory cost settings (shop-wide monthly bills) ───────────────────────
+
+  /**
+   * The factory's monthly expenses, entered once and reused by every costing.
+   *
+   * No per-pair figure is derived here: unlike the retail pool this one is
+   * shared out per product, against each design's own standard capacity.
+   */
+  async getFactorySettings() {
+    const row = await this.prisma.setting.findUnique({ where: { key: FACTORY_SETTINGS_KEY } });
+    const stored = (row?.value ?? null) as Partial<FactoryCostSettings> | null;
+    const monthly =
+      (stored?.monthly as Record<string, number>) ?? { ...DEFAULT_FACTORY_SETTINGS.monthly };
+
+    const fields = (await this.listFields()) as unknown as CostFieldLike[];
+    return {
+      monthly,
+      total_monthly: calcFactoryMonthlyTotal(monthly, fields),
+    };
+  }
+
+  async updateFactorySettings(dto: any) {
+    const current = await this.getFactorySettings();
+    const monthly: Record<string, number> = { ...current.monthly };
+    for (const [k, v] of Object.entries(dto?.monthly ?? {})) {
+      if (v === undefined) continue;
+      monthly[k] = num(v);
+    }
+
+    const next: FactoryCostSettings = { monthly };
+    await this.prisma.setting.upsert({
+      where: { key: FACTORY_SETTINGS_KEY },
+      update: { value: next as any },
+      create: { key: FACTORY_SETTINGS_KEY, value: next as any },
+    });
+
+    return this.getFactorySettings();
+  }
+
+  /**
+   * What one design's share of the monthly pool works out to.
+   * Handy for the settings screen, which previews a few capacities.
+   */
+  async previewFactoryAllocation(standardCapacityPairs: unknown) {
+    const { total_monthly } = await this.getFactorySettings();
+    return { total_monthly, ...calcFactoryAllocation(total_monthly, standardCapacityPairs) };
+  }
+
   // ── Retail cost settings ──────────────────────────────────────────────────
 
   async getRetailSettings() {
@@ -307,6 +361,7 @@ export class CostingService {
   private async computeSnapshot(values: Record<string, unknown>, dto: any, storedCommonPair?: number) {
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
     const retail = await this.getRetailSettings();
+    const factory = await this.getFactorySettings();
 
     // An existing record keeps the common cost it was saved with unless the
     // caller explicitly asks to refresh it, so re-opening an old costing does
@@ -316,10 +371,16 @@ export class CostingService {
         ? retail.retail_common_cost_pair
         : storedCommonPair;
 
+    // The factory pool deliberately behaves the other way round: it is always
+    // read live. That is the point of entering the bills once — a salary rise
+    // reaches every product's next save without reopening each one.
+    const capacityPairs = num(dto?.standard_capacity_pairs);
+
     const result = calcCosting({
       values,
       fields,
-      monthlyProductionDozen: num(dto?.monthly_production),
+      standardCapacityPairs: capacityPairs,
+      factoryMonthlyTotal: factory.total_monthly,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair: commonPair,
@@ -327,6 +388,11 @@ export class CostingService {
 
     return {
       retail_common_cost_pair: money(commonPair),
+      standard_capacity_pairs: capacityPairs,
+      factory_monthly_total: result.factoryMonthlyTotal,
+      // Kept in step with the capacity so anything still reading the old
+      // column sees a sane figure rather than a stale one.
+      monthly_production: money(capacityPairs / PAIRS_PER_DOZEN),
       upper_cost_dozen: result.upperCostDozen,
       sole_cost_dozen: result.soleCostDozen,
       factory_cost_dozen: result.factoryCostDozen,
@@ -359,7 +425,6 @@ export class CostingService {
         image_url: dto?.image_url ?? null,
         entry_date: dto?.entry_date ? new Date(dto.entry_date) : new Date(),
         values: values as any,
-        monthly_production: num(dto?.monthly_production),
         wholesale_profit_pct: num(dto?.wholesale_profit_pct),
         retail_profit_pct: num(dto?.retail_profit_pct),
         ...snapshot,
@@ -378,8 +443,10 @@ export class CostingService {
     const values = mergeCostValues(existing.values as Record<string, unknown>, dto?.values);
 
     const merged = {
-      monthly_production:
-        dto?.monthly_production !== undefined ? num(dto.monthly_production) : existing.monthly_production,
+      standard_capacity_pairs:
+        dto?.standard_capacity_pairs !== undefined
+          ? num(dto.standard_capacity_pairs)
+          : existing.standard_capacity_pairs,
       wholesale_profit_pct:
         dto?.wholesale_profit_pct !== undefined ? num(dto.wholesale_profit_pct) : existing.wholesale_profit_pct,
       retail_profit_pct:
@@ -399,7 +466,6 @@ export class CostingService {
         image_url: dto?.image_url !== undefined ? dto.image_url : existing.image_url,
         entry_date: dto?.entry_date ? new Date(dto.entry_date) : existing.entry_date,
         values: values as any,
-        monthly_production: merged.monthly_production,
         wholesale_profit_pct: merged.wholesale_profit_pct,
         retail_profit_pct: merged.retail_profit_pct,
         ...snapshot,
@@ -416,10 +482,12 @@ export class CostingService {
   async preview(dto: any) {
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
     const retail = await this.getRetailSettings();
+    const factory = await this.getFactorySettings();
     return calcCosting({
       values: dto?.values ?? {},
       fields,
-      monthlyProductionDozen: num(dto?.monthly_production),
+      standardCapacityPairs: num(dto?.standard_capacity_pairs),
+      factoryMonthlyTotal: factory.total_monthly,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair:

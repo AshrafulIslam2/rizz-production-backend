@@ -33,6 +33,23 @@ export class CostingController {
     return this.svc.archiveField(id);
   }
 
+  // ── Factory cost settings (shop-wide monthly bills) ──
+  @Get('factory-settings')
+  getFactorySettings() {
+    return this.svc.getFactorySettings();
+  }
+
+  @Put('factory-settings')
+  updateFactorySettings(@Body() dto: any) {
+    return this.svc.updateFactorySettings(dto);
+  }
+
+  /** What a given standard capacity would cost per dozen and per pair. */
+  @Get('factory-allocation')
+  previewFactoryAllocation(@Query('pairs') pairs?: string) {
+    return this.svc.previewFactoryAllocation(pairs);
+  }
+
   // ── Retail cost settings ──
   @Get('retail-settings')
   getRetailSettings() {

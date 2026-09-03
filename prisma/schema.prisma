@@ -260,6 +260,9 @@ model ProductVariant {
   price            Float
   sale_price       Float?
   production_price Float?
+  /// Units spoken for by confirmed orders but still physically on the shelf.
+  /// Sellable = stock_qty - reserved_qty.
+  reserved_qty     Int     @default(0)
   stock_qty        Int           @default(0)
   attributes   Json
   barcode      String?
@@ -486,13 +489,102 @@ model Order {
   free_gifts      Json?
   total           Float
   payment_method  String   @default("COD")
+
+  /// The COMMERCIAL state of the order. See src/orders/order-status.ts for the
+  /// vocabulary and, more importantly, for which values count as revenue.
+  /// Kept as a String rather than an enum so the vocabulary can grow without a
+  /// data migration; it is validated in code on every write.
   status          String   @default("pending")
+
+  // ── Money, tracked separately from goods ──────────────────────────────────
+  //
+  // A COD parcel is handed over days before the courier settles the cash.
+  // Marking an order Delivered therefore does NOT mark it Paid — the shop
+  // records payment as its own action, so the gap between "sold" and
+  // "collected" stays visible instead of being assumed away.
+  payment_status  String   @default("unpaid")
+  amount_paid     Float    @default(0)
+  paid_at         DateTime?
+  payment_note    String?
+
+  // ── Where the goods physically are ────────────────────────────────────────
+  fulfillment_status String   @default("unfulfilled")
+  courier            String?
+  tracking_id        String?
+  shipped_at         DateTime?
+  delivered_at       DateTime?
+
+  // ── COD verification, before an order is trusted ──────────────────────────
+  verified            Boolean  @default(false)
+  customer_contacted  Boolean  @default(false)
+  verification_method String?
+  verified_by         String?
+  verified_at         DateTime?
+  verification_note   String?
+
+  // ── Why an order was cancelled, faked or duplicated ───────────────────────
+  /// Never blank when the status is one of those three — the API refuses the
+  /// write without it, so fraud analysis always has something to read.
+  void_reason String?
+  voided_by   String?
+  voided_at   DateTime?
+
+  // ── Returns and refunds are two different things ──────────────────────────
+  return_status String @default("none")
+  refund_status String @default("none")
+  refund_amount Float  @default(0)
+  /// Whether returned goods went back on the shelf or were written off.
+  return_restock String?
+
+  /// What stock this order is currently holding: "none", "reserved" or
+  /// "deducted". Stored rather than derived so every transition is a diff
+  /// between two known states — which is what stops a status being toggled
+  /// twice from reserving the same pair twice. See src/orders/order-stock.ts.
+  stock_state String @default("none")
+
+  /// Hidden from the working list without being destroyed.
+  is_archived Boolean @default(false)
+
+  /// The free-text status this row carried before the vocabulary was
+  /// normalised. Written once, never again — nothing is lost.
+  legacy_status String?
+
   notes           String?
+  internal_note   String?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  history OrderStatusHistory[]
+
   @@index([status])
   @@index([order_number])
+  @@index([payment_status])
+  @@index([customer_phone])
+  @@index([is_archived])
+}
+
+/// Append-only audit trail for one order.
+///
+/// Nothing here is ever updated or deleted — a correction is another row. That
+/// is the whole point: "who marked this fake, and when" must survive somebody
+/// changing their mind afterwards.
+model OrderStatusHistory {
+  id       String @id @default(cuid())
+  order_id String
+  order    Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  /// Which of the three independent states changed: "status",
+  /// "payment_status", "fulfillment_status", "verification", "return", "note".
+  field      String
+  from_value String?
+  to_value   String
+  /// Who did it. Free text until the admin panel has real user sessions.
+  changed_by String  @default("admin")
+  /// Reason or note attached to this change.
+  note       String?
+  created_at DateTime @default(now())
+
+  @@index([order_id, created_at])
 }
 
 model Setting {

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { InventoryService, MoveType } from './inventory.service';
+import { StockReconcileService } from './stock-reconcile.service';
 
 class MoveDto {
   @IsString() variant_id!: string;
@@ -12,7 +13,28 @@ class MoveDto {
 
 @Controller('inventory')
 export class InventoryController {
-  constructor(private readonly svc: InventoryService) {}
+  constructor(
+    private readonly svc: InventoryService,
+    private readonly reconcile: StockReconcileService,
+  ) {}
+
+  /**
+   * What the one-time stock repair WOULD do. Writes nothing.
+   *
+   * Every order used to decrement stock the moment it was placed, so orders
+   * that were cancelled, faked or never confirmed have eaten inventory that
+   * was never given back. This shows exactly how much, per variant.
+   */
+  @Get('reconcile/audit')
+  auditStock() {
+    return this.reconcile.audit();
+  }
+
+  /** Apply that repair. Refuses to run a second time unless forced. */
+  @Post('reconcile/apply')
+  applyStockReconcile(@Body() dto: any) {
+    return this.reconcile.apply({ force: dto?.force === true, actor: dto?.actor });
+  }
 
   @Post('move')
   move(@Body() dto: MoveDto) {

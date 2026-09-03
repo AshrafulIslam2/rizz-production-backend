@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { isRealOrder, isRevenue, statusOf } from '../orders/order-status';
 
 @Injectable()
 export class StatsService {
@@ -47,9 +48,12 @@ export class StatsService {
     }
 
     // ── order aggregation ─────────────────────────────────────────────────────
-    const delivered = orders.filter((o) => o.status === 'delivered');
-    const cancelled = orders.filter((o) => o.status === 'cancelled');
-    const pending = orders.filter((o) => o.status === 'pending');
+    // Read every status through the shared rules so a legacy "dispatched" row
+    // and a fake order are each handled once, the same way, everywhere.
+    const delivered = orders.filter((o) => isRevenue(o.status));
+    const cancelled = orders.filter((o) => statusOf(o.status) === 'cancelled');
+    const pending = orders.filter((o) => statusOf(o.status) === 'pending');
+    const fake = orders.filter((o) => !isRealOrder(o.status));
 
     let totalRevenue = 0;
     let totalCost = 0;
@@ -60,8 +64,15 @@ export class StatsService {
       const key = order.customer_phone || order.customer_email || order.customer_name;
       const existing = customerMap.get(key) ?? { name: order.customer_name, phone: order.customer_phone, email: order.customer_email ?? '', orders: 0, value: 0, cancelled: 0, cancelledValue: 0, lastOrder: order.created_at };
       existing.orders += 1;
-      if (order.status === 'cancelled') { existing.cancelled += 1; existing.cancelledValue += order.total; }
-      else { existing.value += order.total; }
+      if (statusOf(order.status) === 'cancelled') {
+        existing.cancelled += 1;
+        existing.cancelledValue += order.total;
+      } else if (isRevenue(order.status)) {
+        // Lifetime value means money actually received. Counting every
+        // non-cancelled order here is what let a customer who placed four
+        // fake orders top the "best customers" list.
+        existing.value += order.total;
+      }
       if (order.created_at > existing.lastOrder) existing.lastOrder = order.created_at;
       customerMap.set(key, existing);
     }
@@ -124,7 +135,7 @@ export class StatsService {
       const label = order.created_at.toISOString().slice(0, 7); // YYYY-MM
       const entry = monthlyMap.get(label) ?? { revenue: 0, orders: 0, profit: 0, cost: 0 };
       entry.orders += 1;
-      if (order.status === 'delivered') {
+      if (isRevenue(order.status)) {
         entry.revenue += order.total;
         const items: any[] = Array.isArray(order.items) ? order.items : [];
         for (const item of items) {
@@ -182,6 +193,7 @@ export class StatsService {
         totalDelivered: delivered.length,
         totalCancelled: cancelled.length,
         totalPending: pending.length,
+        totalFake: fake.length,
         totalProfit,
         totalCost,
         profitMargin: totalRevenue > 0 ? +((totalProfit / totalRevenue) * 100).toFixed(1) : 0,

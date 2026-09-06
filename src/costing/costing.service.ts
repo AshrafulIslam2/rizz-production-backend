@@ -473,6 +473,63 @@ export class CostingService {
     });
   }
 
+  /**
+   * Copy an existing costing onto a new product.
+   *
+   * The whole point is that a new design usually shares most of its build with
+   * one already costed — same leather, same sole, a different upper. Copying
+   * means the admin edits the three rows that changed instead of retyping
+   * forty.
+   *
+   * Two deliberate choices:
+   *   - the catalog link is NOT copied. This is a different product, and
+   *     inheriting the old product_id would silently attach two costings to
+   *     one catalog item.
+   *   - every figure is recomputed rather than copied, so the new record is
+   *     priced against today's factory pool, not the one the original was
+   *     saved with.
+   */
+  async duplicateCosting(id: string, dto: any) {
+    const source = await this.getCosting(id);
+
+    const name = String(dto?.product_name ?? '').trim();
+    if (!name) throw new BadRequestException('A name for the new product costing is required.');
+
+    // Deep-copied through the same merge the form uses, so structured
+    // calculator rows arrive intact rather than as a shared reference.
+    const values = mergeCostValues({}, source.values as Record<string, unknown>);
+
+    const merged = {
+      standard_capacity_pairs:
+        dto?.standard_capacity_pairs !== undefined
+          ? num(dto.standard_capacity_pairs)
+          : (source as any).standard_capacity_pairs,
+      wholesale_profit_pct:
+        dto?.wholesale_profit_pct !== undefined
+          ? num(dto.wholesale_profit_pct)
+          : source.wholesale_profit_pct,
+      retail_profit_pct:
+        dto?.retail_profit_pct !== undefined ? num(dto.retail_profit_pct) : source.retail_profit_pct,
+    };
+
+    const snapshot = await this.computeSnapshot(values, merged);
+
+    return this.prisma.productCosting.create({
+      data: {
+        product_id: dto?.product_id ?? null,
+        product_name: name,
+        product_code: dto?.product_code !== undefined ? dto.product_code : null,
+        category: dto?.category !== undefined ? dto.category : source.category,
+        image_url: dto?.image_url !== undefined ? dto.image_url : null,
+        entry_date: new Date(),
+        values: values as any,
+        wholesale_profit_pct: merged.wholesale_profit_pct,
+        retail_profit_pct: merged.retail_profit_pct,
+        ...snapshot,
+      },
+    });
+  }
+
   async removeCosting(id: string) {
     await this.getCosting(id);
     return this.prisma.productCosting.delete({ where: { id } });

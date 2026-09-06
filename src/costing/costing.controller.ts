@@ -83,6 +83,12 @@ export class CostingController {
     return this.svc.createCosting(dto);
   }
 
+  /** Copy a costing onto a new product, under a new name. */
+  @Post('products/:id/duplicate')
+  duplicateCosting(@Param('id') id: string, @Body() dto: any) {
+    return this.svc.duplicateCosting(id, dto);
+  }
+
   @Patch('products/:id')
   updateCosting(@Param('id') id: string, @Body() dto: any) {
     return this.svc.updateCosting(id, dto);

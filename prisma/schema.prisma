@@ -307,6 +307,15 @@ model ProductMedia {
   product       Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
   variant_id    String?
   variant       ProductVariant? @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+
+  /// Which colourway this image shows, matching ProductVariant.attributes.color.
+  ///
+  /// Deliberately the colour NAME rather than a variant_id: a variant is a
+  /// size AND a colour, so linking an image to one variant would mean tagging
+  /// the same photo once per size. The storefront switches the gallery on this
+  /// when the customer picks a colour. Null means the image belongs to no
+  /// particular colour and is always shown.
+  color         String?
   media_type    MediaType
   media_url     String
   thumbnail_url String?
@@ -324,6 +333,7 @@ model ProductMedia {
   @@index([is_primary])
   @@index([is_featured])
   @@index([status])
+  @@index([product_id, color])
 }
 
 model ProductSeo {

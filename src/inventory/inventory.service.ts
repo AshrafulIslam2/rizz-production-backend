@@ -41,23 +41,53 @@ export class InventoryService {
     });
   }
 
+  /**
+   * Low stock, measured on what can actually still be sold.
+   *
+   * Filtering on stock_qty alone hides the worst case: a variant with 2 on the
+   * shelf and both pairs already reserved is out of stock for the next
+   * customer, but would never be flagged. The threshold is therefore applied
+   * to (stock_qty - reserved_qty), which Prisma cannot express in a where
+   * clause, so a slightly wider set is fetched and narrowed here.
+   */
   async getLowStock(threshold = 5) {
     const variants = await this.prisma.productVariant.findMany({
-      where: { stock_qty: { lt: threshold } },
       include: { product: { select: { name: true, slug: true, media: { where: { is_primary: true }, take: 1 } } } },
       orderBy: { stock_qty: 'asc' },
     });
-    return variants;
+
+    return variants
+      .map((v) => {
+        const reserved = (v as any).reserved_qty ?? 0;
+        return { ...v, reserved_qty: reserved, available_qty: Math.max(0, v.stock_qty - reserved) };
+      })
+      .filter((v) => v.available_qty < threshold)
+      .sort((a, b) => a.available_qty - b.available_qty);
   }
 
   async getStockSummary() {
     const variants = await this.prisma.productVariant.findMany({
-      select: { stock_qty: true, price: true, production_price: true },
+      select: { stock_qty: true, reserved_qty: true, price: true, production_price: true } as any,
     });
-    const totalQty = variants.reduce((s, v) => s + v.stock_qty, 0);
-    const totalValue = variants.reduce((s, v) => s + v.price * v.stock_qty, 0);
-    const totalCost = variants.reduce((s, v) => s + (v.production_price ?? 0) * v.stock_qty, 0);
-    const outOfStock = variants.filter((v) => v.stock_qty === 0).length;
-    return { totalQty, totalValue, totalCost, outOfStock, totalVariants: variants.length };
+
+    const avail = (v: any) => Math.max(0, (v.stock_qty ?? 0) - (v.reserved_qty ?? 0));
+
+    const totalQty = variants.reduce((s, v: any) => s + (v.stock_qty ?? 0), 0);
+    const totalReserved = variants.reduce((s, v: any) => s + (v.reserved_qty ?? 0), 0);
+    const totalAvailable = variants.reduce((s, v: any) => s + avail(v), 0);
+    const totalValue = variants.reduce((s, v: any) => s + v.price * (v.stock_qty ?? 0), 0);
+    const totalCost = variants.reduce((s, v: any) => s + (v.production_price ?? 0) * (v.stock_qty ?? 0), 0);
+    // Out of stock means nothing left to SELL, not nothing left on the shelf.
+    const outOfStock = variants.filter((v: any) => avail(v) === 0).length;
+
+    return {
+      totalQty,
+      totalReserved,
+      totalAvailable,
+      totalValue,
+      totalCost,
+      outOfStock,
+      totalVariants: variants.length,
+    };
   }
 }

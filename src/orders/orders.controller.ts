@@ -28,6 +28,17 @@ export class OrdersController {
     );
   }
 
+  /**
+   * Re-apply the stock policy to every order.
+   *
+   * Idempotent — an order already holding the right thing is skipped. Run it
+   * after a policy change to catch orders placed under the old rules.
+   */
+  @Post('stock/resync')
+  resyncStockStates() {
+    return this.ordersService.resyncStockStates();
+  }
+
   /** Numbers that keep producing orders the shop never gets paid for. */
   @Get('fraud/customers')
   getFraudCustomers(@Query('minScore') minScore?: string) {

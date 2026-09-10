@@ -40,4 +40,9 @@ export class CreateProductMediaDto {
   @IsOptional()
   @IsString()
   variant_id?: string;
+
+  /** Colour name this image shows, e.g. "Black". Null = shown for every colour. */
+  @IsOptional()
+  @IsString()
+  color?: string;
 }

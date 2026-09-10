@@ -448,15 +448,22 @@ export class ProductsService {
         is_primary: dto.is_primary ?? false,
         is_featured: dto.is_featured ?? false,
         status: dto.status ? (dto.status as any) : undefined,
+        color: dto.color?.trim() || null,
       } as any,
     });
   }
 
   async updateMedia(productId: string, mediaId: string, dto: UpdateMediaDto) {
     await this.ensureMediaBelongsToProduct(mediaId, productId);
+
+    const data: any = { ...dto };
+    // An empty colour means "untag" — the image goes back to showing for every
+    // colourway rather than being stored as the colour named "".
+    if (dto.color !== undefined) data.color = String(dto.color).trim() || null;
+
     return this.prisma.productMedia.update({
       where: { id: mediaId } as any,
-      data: dto as any,
+      data,
     });
   }
 

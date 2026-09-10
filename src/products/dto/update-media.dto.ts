@@ -20,4 +20,12 @@ export class UpdateMediaDto {
   @IsOptional()
   @IsInt()
   sort_order?: number;
+
+  /**
+   * Colour name this image shows. Send an empty string to untag it, which
+   * makes the image show for every colour again.
+   */
+  @IsOptional()
+  @IsString()
+  color?: string;
 }

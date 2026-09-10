@@ -50,6 +50,15 @@ export type RestockChoice = 'sellable' | 'damaged';
 export function targetStockState(status: unknown, restock?: unknown): StockState {
   const s: OrderStatus = statusOf(status);
   switch (s) {
+    // A placed order holds its goods from the moment the customer submits it.
+    //
+    // This is deliberately stricter than "reserve on confirm". A COD order can
+    // sit unverified for hours, and in that window the same last pair can be
+    // sold to two people — the shop then has to ring one of them back. Holding
+    // at checkout costs nothing if the order turns out to be fake, because
+    // marking it fake releases the hold again.
+    case 'pending':
+    case 'verification_required':
     case 'confirmed':
     case 'processing':
     case 'shipped':
@@ -64,9 +73,7 @@ export function targetStockState(status: unknown, restock?: unknown): StockState
       // an honest write-off, so "damaged" keeps the stock deducted.
       return restock === 'damaged' ? 'deducted' : 'none';
 
-    // Placed but untrusted, or dead. Neither holds anything.
-    case 'pending':
-    case 'verification_required':
+    // Dead. Nothing is held, so nothing is lost.
     case 'cancelled':
     case 'fake':
     case 'duplicate':

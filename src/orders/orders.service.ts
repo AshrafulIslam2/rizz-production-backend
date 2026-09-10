@@ -150,10 +150,29 @@ export class OrdersService {
         },
       });
 
-      // Deliberately no stock movement here. A newly placed COD order is a
-      // claim, not a sale — stock is reserved when it is confirmed and only
-      // leaves the books when it is delivered.
-      return created;
+      // The order holds its goods from the moment it is placed.
+      //
+      // Waiting for the admin to confirm left a window in which the same last
+      // pair could be sold to two customers — the shop then had to ring one of
+      // them back. Holding at checkout costs nothing if the order turns out to
+      // be fake, because marking it fake releases the hold again.
+      //
+      // Note this RESERVES rather than deducts: the pairs are still physically
+      // on the shelf, so stock_qty is untouched until delivery.
+      const stock_state = await this.syncOrderStock(tx, created, created.status, 'website');
+      const withStock = await tx.order.update({
+        where: { id: created.id },
+        data: { stock_state } as any,
+      });
+
+      // The audit trail starts at the beginning rather than at the first admin
+      // action, so an order's whole life is readable.
+      await this.log(tx, created.id, 'status', null, statusOf(created.status), 'website', 'Order placed');
+      if (stock_state !== 'none') {
+        await this.log(tx, created.id, 'stock', 'none', stock_state, 'website', STOCK_NOTE[stock_state] ?? null);
+      }
+
+      return withStock;
     });
   }
 
@@ -701,6 +720,45 @@ export class OrdersService {
       throw new BadRequestException('Pass confirm=PERMANENT to delete a test order permanently.');
     }
     return this.prisma.order.delete({ where: { id } as any });
+  }
+
+  /**
+   * Bring every order's stock holding into line with its status.
+   *
+   * Safe to run whenever, and safe to run twice: each order moves by the
+   * DIFFERENCE between what it currently holds and what its status says it
+   * should hold, so an order already in step is skipped entirely. That is what
+   * makes this the right tool after a policy change — such as making a placed
+   * order reserve immediately instead of waiting for confirmation — to catch
+   * the orders that predate it.
+   */
+  async resyncStockStates() {
+    const orders = await this.prisma.order.findMany({
+      select: {
+        id: true, order_number: true, status: true, items: true,
+        stock_state: true, return_restock: true,
+      } as any,
+      orderBy: { created_at: 'asc' },
+    });
+
+    const changed: Array<{ order: string; status: string; from: string; to: string }> = [];
+
+    for (const o of orders as any[]) {
+      const from = stockStateOf(o.stock_state);
+      const to = targetStockState(o.status, o.return_restock);
+      if (from === to) continue;
+
+      await this.prisma.$transaction(async (tx) => {
+        const after = await this.syncOrderStock(tx, o, o.status, 'resync');
+        await tx.order.update({ where: { id: o.id }, data: { stock_state: after } as any });
+        await this.log(tx, o.id, 'stock', from, after, 'resync',
+          'Brought into line with the current stock policy');
+      });
+
+      changed.push({ order: o.order_number, status: statusOf(o.status), from, to });
+    }
+
+    return { checked: orders.length, changed: changed.length, details: changed };
   }
 
   /**

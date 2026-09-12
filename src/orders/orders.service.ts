@@ -96,7 +96,53 @@ export class OrdersService {
       include: { history: { orderBy: { created_at: 'asc' } } },
     } as any);
     if (!order) throw new NotFoundException(`Order ${id} not found`);
-    return order;
+
+    return { ...(order as any), items: await this.withItemImages((order as any).items) };
+  }
+
+  /**
+   * Attach a picture to each order line.
+   *
+   * Resolved here rather than in the browser so the admin screen makes one
+   * request instead of one per line. The colour tagged on the image wins where
+   * there is one — an order for the black pair should show the black pair —
+   * falling back to the product's primary image, then to anything at all.
+   *
+   * Enrichment only: nothing is written back to the stored order, so the
+   * historic record of what was bought stays exactly as it was.
+   */
+  private async withItemImages(items: unknown): Promise<any[]> {
+    const list: any[] = Array.isArray(items) ? items : [];
+    if (list.length === 0) return list;
+
+    const slugs = Array.from(new Set(list.map((i) => String(i?.slug ?? '')).filter(Boolean)));
+    if (slugs.length === 0) return list;
+
+    const products = await this.prisma.product.findMany({
+      where: { slug: { in: slugs } } as any,
+      select: {
+        slug: true,
+        media: {
+          where: { media_type: 'IMAGE' as any },
+          select: { media_url: true, color: true, is_primary: true, sort_order: true },
+          orderBy: [{ is_primary: 'desc' }, { sort_order: 'asc' }],
+        },
+      } as any,
+    });
+
+    const bySlug = new Map(products.map((p: any) => [p.slug, p.media ?? []]));
+
+    return list.map((item) => {
+      const media: any[] = bySlug.get(String(item?.slug ?? '')) ?? [];
+      if (media.length === 0) return item;
+
+      const wanted = String(item?.color ?? '').trim().toLowerCase();
+      const tagged = wanted
+        ? media.find((m) => String(m.color ?? '').trim().toLowerCase() === wanted)
+        : undefined;
+
+      return { ...item, image: (tagged ?? media[0])?.media_url ?? null };
+    });
   }
 
   async create(dto: CreateOrderDto) {
@@ -530,6 +576,22 @@ export class OrdersService {
       );
     }
 
+    // What the courier kept out of the cash before handing it over. The
+    // customer still paid in full, so this must NOT reduce amount_paid —
+    // doing that would leave a settled order looking partially paid for ever.
+    const deliveryCharge = Number(dto?.delivery_charge ?? 0);
+    if (!Number.isFinite(deliveryCharge) || deliveryCharge < 0) {
+      throw new BadRequestException('Delivery charge must be a positive number.');
+    }
+    if (deliveryCharge > incoming + 0.01) {
+      throw new BadRequestException(
+        `The courier cannot keep ৳${deliveryCharge} out of a ৳${incoming} collection.`,
+      );
+    }
+    const delivery_charge_paid =
+      Math.round(((Number((order as any).delivery_charge_paid) || 0) + deliveryCharge) * 100) / 100;
+    const netThisTime = Math.round((incoming - deliveryCharge) * 100) / 100;
+
     const payment_status = amount_paid <= 0 ? 'unpaid' : amount_paid >= total - 0.01 ? 'paid' : 'partially_paid';
     const actor = String(dto?.recorded_by ?? 'admin');
     const before = paymentStatusOf((order as any).payment_status);
@@ -539,13 +601,16 @@ export class OrdersService {
         where: { id } as any,
         data: {
           amount_paid,
+          delivery_charge_paid,
           payment_status,
           paid_at: payment_status === 'paid' ? new Date() : (order as any).paid_at,
           payment_note: dto?.note ?? (order as any).payment_note,
         } as any,
       });
       await this.log(tx, id, 'payment_status', before, payment_status, actor,
-        `Collected ৳${incoming}${dto?.note ? ` — ${dto.note}` : ''}`);
+        deliveryCharge > 0
+          ? `Collected ৳${incoming} − ৳${deliveryCharge} courier charge = ৳${netThisTime} received${dto?.note ? ` — ${dto.note}` : ''}`
+          : `Collected ৳${incoming}${dto?.note ? ` — ${dto.note}` : ''}`);
       return updated;
     });
   }

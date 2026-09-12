@@ -270,8 +270,10 @@ export type OrderLike = {
   status?: unknown;
   created_at?: string | Date;
   refund_amount?: unknown;
-  /** Cash actually in hand. For COD this lands when the courier settles. */
+  /** Gross cash the customer handed over. For COD the courier collects it. */
   amount_paid?: unknown;
+  /** What the courier kept out of that before remitting to the shop. */
+  delivery_charge_paid?: unknown;
   payment_status?: unknown;
 };
 
@@ -311,6 +313,15 @@ export type OrderSummary = {
     collectedRevenue: number;
     /** Delivered sales still waiting on the courier to settle. */
     uncollectedDeliveredValue: number;
+    /** Delivery fees the couriers kept out of what they collected. */
+    courierCharges: number;
+    /**
+     * What actually reached the shop: collected less the couriers' cut.
+     *
+     * This is the figure to trust when asking "how much money do we have".
+     * Collected Revenue is what customers paid; this is what survived the trip.
+     */
+    netCollected: number;
     refundAmount: number;
     returnLoss: number;
     cancelledValue: number;
@@ -357,6 +368,7 @@ export function summariseOrders(orders: OrderLike[]): OrderSummary {
   let deliveredSales = 0;
   let collectedRevenue = 0;
   let uncollectedDeliveredValue = 0;
+  let courierCharges = 0;
   let refundAmount = 0;
   let returnLoss = 0;
   let cancelledValue = 0;
@@ -385,6 +397,7 @@ export function summariseOrders(orders: OrderLike[]): OrderSummary {
     // was prepaid still took the customer's money.
     const paid = n(o?.amount_paid);
     collectedRevenue += paid;
+    courierCharges += n(o?.delivery_charge_paid);
 
     if (REVENUE_STATUSES.includes(s)) {
       deliveredSales += total;
@@ -420,6 +433,8 @@ export function summariseOrders(orders: OrderLike[]): OrderSummary {
       deliveredSales: round2(deliveredSales),
       collectedRevenue: round2(collectedRevenue),
       uncollectedDeliveredValue: round2(uncollectedDeliveredValue),
+      courierCharges: round2(courierCharges),
+      netCollected: round2(collectedRevenue - courierCharges),
       refundAmount: round2(refundAmount),
       returnLoss: round2(returnLoss),
       cancelledValue: round2(cancelledValue),

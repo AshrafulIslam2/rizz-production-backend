@@ -513,7 +513,14 @@ model Order {
   // records payment as its own action, so the gap between "sold" and
   // "collected" stays visible instead of being assumed away.
   payment_status  String   @default("unpaid")
+  /// Gross cash the customer handed over — the full COD amount.
   amount_paid     Float    @default(0)
+  /// What the courier kept out of that before remitting.
+  ///
+  /// Tracked apart from amount_paid on purpose: the customer HAS paid in full,
+  /// so the order must not read as partially paid, but the shop only ever sees
+  /// (amount_paid - delivery_charge_paid) in its own hands.
+  delivery_charge_paid Float @default(0)
   paid_at         DateTime?
   payment_note    String?
 

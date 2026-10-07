@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Post, Query, BadRequestException } from '@nestjs/common';
 import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { InventoryService, MoveType } from './inventory.service';
 import { StockReconcileService } from './stock-reconcile.service';
@@ -49,6 +49,14 @@ export class InventoryController {
   @Get('low-stock')
   lowStock(@Query('threshold') threshold?: string) {
     return this.svc.getLowStock(threshold ? Number(threshold) : 5);
+  }
+
+  @Get('dashboard')
+  dashboard(@Query('threshold', new DefaultValuePipe(10), ParseIntPipe) threshold: number) {
+    if (threshold < 0 || threshold > 10000) {
+      throw new BadRequestException('Threshold must be between 0 and 10000.');
+    }
+    return this.svc.getDashboard(threshold);
   }
 
   @Get('summary')

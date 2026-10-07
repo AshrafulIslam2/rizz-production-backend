@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildStockDashboard } from './stock-dashboard';
 
 export type MoveType = 'STOCK_IN' | 'STOCK_OUT' | 'ADJUSTMENT' | 'DAMAGE' | 'SALE' | 'RETURN';
 
@@ -65,29 +66,25 @@ export class InventoryService {
       .sort((a, b) => a.available_qty - b.available_qty);
   }
 
-  async getStockSummary() {
-    const variants = await this.prisma.productVariant.findMany({
-      select: { stock_qty: true, reserved_qty: true, price: true, production_price: true } as any,
+  async getDashboard(threshold = 10) {
+    const products = await this.prisma.product.findMany({
+      orderBy: { name: 'asc' },
+      select: {
+        id: true, name: true, slug: true,
+        variants: {
+          orderBy: { created_at: 'asc' },
+          select: {
+            id: true, sku: true, variant_name: true, attributes: true,
+            stock_qty: true, reserved_qty: true, price: true,
+            sale_price: true, production_price: true,
+          },
+        },
+      },
     });
+    return buildStockDashboard(products, threshold);
+  }
 
-    const avail = (v: any) => Math.max(0, (v.stock_qty ?? 0) - (v.reserved_qty ?? 0));
-
-    const totalQty = variants.reduce((s, v: any) => s + (v.stock_qty ?? 0), 0);
-    const totalReserved = variants.reduce((s, v: any) => s + (v.reserved_qty ?? 0), 0);
-    const totalAvailable = variants.reduce((s, v: any) => s + avail(v), 0);
-    const totalValue = variants.reduce((s, v: any) => s + v.price * (v.stock_qty ?? 0), 0);
-    const totalCost = variants.reduce((s, v: any) => s + (v.production_price ?? 0) * (v.stock_qty ?? 0), 0);
-    // Out of stock means nothing left to SELL, not nothing left on the shelf.
-    const outOfStock = variants.filter((v: any) => avail(v) === 0).length;
-
-    return {
-      totalQty,
-      totalReserved,
-      totalAvailable,
-      totalValue,
-      totalCost,
-      outOfStock,
-      totalVariants: variants.length,
-    };
+  async getStockSummary() {
+    return (await this.getDashboard()).summary;
   }
 }

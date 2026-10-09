@@ -236,6 +236,13 @@ model Product {
   height            Float?
   meta_title        String?
   meta_description  String?
+  focus_keyword     String?
+  secondary_keywords String[] @default([])
+  long_tail_keywords String[] @default([])
+  geo_keywords      String[] @default([])
+  seo_heading       String?
+  seo_content       String?
+  seo_content_bn    String?
   variants          ProductVariant[]
   media             ProductMedia[]
   images            ProductImage[]

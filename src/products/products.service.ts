@@ -51,6 +51,17 @@ export class ProductsService {
     });
   }
 
+  async findPublicBySlug(slug: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { slug, status: 'ACTIVE', is_published: true },
+      include: {
+        variants: true, images: true, media: true, seo: true,
+        translations: true, faqs: true, reviews: true, category: true,
+      },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
   async findOne(productId: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId } as any,

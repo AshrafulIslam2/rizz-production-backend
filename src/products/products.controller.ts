@@ -43,6 +43,11 @@ export class ProductsController {
     return this.productsService.findAll(visibility);
   }
 
+  @Get('by-slug/:slug')
+  findPublicBySlug(@Param('slug') slug: string) {
+    return this.productsService.findPublicBySlug(slug);
+  }
+
   @Get(':productId')
   findOne(@Param('productId') productId: string) {
     return this.productsService.findOne(productId);

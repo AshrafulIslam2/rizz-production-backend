@@ -1,6 +1,8 @@
 import { Transform } from 'class-transformer';
 import {
   IsArray,
+  ArrayMaxSize,
+  MaxLength,
   IsBoolean,
   IsEnum,
   IsNumber,
@@ -74,4 +76,45 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   meta_description?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  focus_keyword?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  seo_heading?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(12000)
+  seo_content?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(12000)
+  seo_content_bn?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  secondary_keywords?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  long_tail_keywords?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  geo_keywords?: string[];
 }

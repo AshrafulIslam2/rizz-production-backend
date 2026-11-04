@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AdminKeyGuard } from './auth/admin-key.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FaqModule } from './faq/faq.module';
@@ -62,6 +64,10 @@ import { CostingModule } from './costing/costing.module';
     CostingModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Every route needs the admin key unless it is marked @Public().
+    { provide: APP_GUARD, useClass: AdminKeyGuard },
+  ],
 })
 export class AppModule {}

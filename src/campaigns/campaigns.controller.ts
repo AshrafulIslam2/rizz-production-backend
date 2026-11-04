@@ -2,16 +2,19 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { CalculateCartDto } from './dto/calculate-cart.dto';
 import { CampaignsService } from './campaigns.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('campaigns')
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
+  @Public()
   @Get('active')
   findActive() {
     return this.campaignsService.findActive();
   }
 
+  @Public()
   @Post('calculate-cart')
   calculateCart(@Body() dto: CalculateCartDto) {
     return this.campaignsService.calculateCart(dto);

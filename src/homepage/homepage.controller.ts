@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { HomepageService } from './homepage.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('homepage')
 export class HomepageController {
   constructor(private readonly homepageService: HomepageService) {}
 
+  @Public()
   @Get(':section')
   getSection(@Param('section') section: string) {
     return this.homepageService.getSection(section);

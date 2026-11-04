@@ -8,10 +8,13 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Public } from '../auth/public.decorator';
+import { isAdminRequest } from '../auth/admin-key.guard';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import {
   CreateProductDto,
@@ -37,15 +40,23 @@ export class ProductsController {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  /** `?visibility=public` restricts the list to ACTIVE + published products. */
+  /**
+   * `?visibility=public` restricts the list to ACTIVE + published products.
+   * Non-admin callers always get the public list, without internal cost fields.
+   */
+  @Public()
   @Get()
-  findAll(@Query('visibility') visibility?: string) {
-    return this.productsService.findAll(visibility);
+  async findAll(@Req() req: unknown, @Query('visibility') visibility?: string) {
+    if (isAdminRequest(req)) return this.productsService.findAll(visibility);
+    const products = await this.productsService.findAll('public');
+    return products.map(stripInternalFields);
   }
 
+  @Public()
   @Get('by-slug/:slug')
-  findPublicBySlug(@Param('slug') slug: string) {
-    return this.productsService.findPublicBySlug(slug);
+  async findPublicBySlug(@Req() req: unknown, @Param('slug') slug: string) {
+    const product = await this.productsService.findPublicBySlug(slug);
+    return isAdminRequest(req) ? product : stripInternalFields(product);
   }
 
   @Get(':productId')
@@ -216,4 +227,23 @@ export class ProductsController {
   createReview(@Param('productId') productId: string, @Body() dto: CreateProductReviewDto) {
     return this.productsService.createReview(productId, dto);
   }
+}
+
+/**
+ * Removes data the public storefront must never see: production cost on each
+ * variant, and reviews that haven't been approved (status "active").
+ */
+function stripInternalFields<T>(product: T): T {
+  const p = product as Record<string, unknown>;
+  const out: Record<string, unknown> = { ...p };
+  if (Array.isArray(p.variants)) {
+    out.variants = p.variants.map((v) => {
+      const { production_price: _omit, ...rest } = v as Record<string, unknown>;
+      return rest;
+    });
+  }
+  if (Array.isArray(p.reviews)) {
+    out.reviews = p.reviews.filter((r) => (r as { status?: string }).status === 'active');
+  }
+  return out as T;
 }

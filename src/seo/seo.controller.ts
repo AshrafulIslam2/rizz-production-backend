@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { SeoService } from './seo.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('seo')
 export class SeoController {
   constructor(private readonly seoService: SeoService) {}
 
+  @Public()
   @Get(':key')
   get(@Param('key') key: string) {
     return this.seoService.get(key);

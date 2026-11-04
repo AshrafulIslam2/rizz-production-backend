@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import { ProductViewsService } from './product-views.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('products/:id/views')
 export class ProductViewsController {
   constructor(private readonly productViewsService: ProductViewsService) {}
 
+  @Public()
   @Post('heartbeat')
   async heartbeat(@Param('id') id: string, @Body() dto: HeartbeatDto) {
     const count = await this.productViewsService.heartbeat(id, dto.session_id);

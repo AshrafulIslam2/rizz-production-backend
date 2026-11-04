@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { BrandingService } from './branding.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('branding')
 export class BrandingController {
   constructor(private readonly brandingService: BrandingService) {}
 
+  @Public()
   @Get()
   get() {
     return this.brandingService.get();

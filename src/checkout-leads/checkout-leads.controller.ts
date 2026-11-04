@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestj
 import { IsString } from 'class-validator';
 import { CreateCheckoutLeadDto } from './dto/create-checkout-lead.dto';
 import { CheckoutLeadsService } from './checkout-leads.service';
+import { Public } from '../auth/public.decorator';
 
 class UpdateCheckoutLeadStatusDto {
   @IsString()
@@ -17,6 +18,7 @@ export class CheckoutLeadsController {
     return this.checkoutLeadsService.findAll(status, source);
   }
 
+  @Public()
   @Post()
   upsert(@Body() dto: CreateCheckoutLeadDto) {
     return this.checkoutLeadsService.upsert(dto);

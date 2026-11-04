@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('orders')
 export class OrdersController {
@@ -63,6 +64,8 @@ export class OrdersController {
     return this.ordersService.getHistory(id);
   }
 
+  /** Storefront checkout. The only public order route — everything else is admin-only. */
+  @Public()
   @Post()
   create(@Body() dto: CreateOrderDto) {
     return this.ordersService.create(dto);

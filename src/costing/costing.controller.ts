@@ -46,8 +46,8 @@ export class CostingController {
 
   /** What a given standard capacity would cost per dozen and per pair. */
   @Get('factory-allocation')
-  previewFactoryAllocation(@Query('pairs') pairs?: string) {
-    return this.svc.previewFactoryAllocation(pairs);
+  previewFactoryAllocation(@Query('pairs') pairs?: string, @Query('line') line?: string) {
+    return this.svc.previewFactoryAllocation(pairs, line);
   }
 
   // ── Retail cost settings ──

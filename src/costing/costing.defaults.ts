@@ -1,4 +1,4 @@
-import { CostBasisKey, CostCalculatorKey, CostSectionKey } from './costing.calc';
+import { CostBasisKey, CostCalculatorKey, CostSectionKey, FactoryEmployee } from './costing.calc';
 
 /**
  * Fields created the first time the costing screen is opened.
@@ -223,6 +223,12 @@ export const FACTORY_SETTINGS_KEY = 'factory_cost_settings';
 export type FactoryCostSettings = {
   /** fieldKey -> monthly amount for FACTORY fields on a PER_MONTH basis. */
   monthly: Record<string, number>;
+  /**
+   * Production staff, each tagged Shoe / Sandal / both. Once anyone is on
+   * this list it replaces the single salary figure, and each design is charged
+   * only the wages of people on its line (see calcFactoryLinePool).
+   */
+  employees?: FactoryEmployee[];
 };
 
 export const DEFAULT_FACTORY_SETTINGS: FactoryCostSettings = {

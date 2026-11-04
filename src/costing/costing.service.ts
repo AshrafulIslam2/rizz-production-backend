@@ -1,9 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   calcCosting,
   calcFactoryAllocation,
+  calcFactoryLinePool,
   calcFactoryMonthlyTotal,
+  activeEmployees,
+  FactoryEmployee,
+  getLine,
+  inferProductLine,
+  isProductLine,
+  LABOUR_FIELD_KEY,
+  PRODUCT_LINES,
+  ProductLineKey,
   calcRetailCommonCostPerPair,
   mergeCostValues,
   money,
@@ -261,11 +271,52 @@ export class CostingService {
     const monthly =
       (stored?.monthly as Record<string, number>) ?? { ...DEFAULT_FACTORY_SETTINGS.monthly };
 
+    const employees: FactoryEmployee[] = Array.isArray(stored?.employees) ? stored!.employees! : [];
+
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
+    const line_pools = Object.fromEntries(
+      PRODUCT_LINES.map((line) => [line, calcFactoryLinePool(monthly, fields, employees, line)]),
+    ) as Record<ProductLineKey, ReturnType<typeof calcFactoryLinePool>>;
+
     return {
       monthly,
+      employees,
       total_monthly: calcFactoryMonthlyTotal(monthly, fields),
+      /** The pool a Shoe design and a Sandal design are each costed against. */
+      line_pools,
     };
+  }
+
+  /**
+   * The pool one costing is charged against: its saved line, else a guess from
+   * category / name, else the whole team (the original behaviour).
+   */
+  private async factoryPoolFor(values: Record<string, unknown>, category?: unknown, productName?: unknown) {
+    const settings = await this.getFactorySettings();
+    const fields = (await this.listFields()) as unknown as CostFieldLike[];
+    const line = getLine(values) ?? inferProductLine(category as string, productName as string);
+    return calcFactoryLinePool(settings.monthly, fields, settings.employees, line);
+  }
+
+  /** Validates the employee list sent from Factory Cost Settings. */
+  private sanitizeEmployees(raw: unknown): FactoryEmployee[] {
+    if (!Array.isArray(raw)) throw new BadRequestException('employees must be a list.');
+    return raw.map((e: any, i: number) => {
+      const name = String(e?.name ?? '').trim();
+      if (!name) throw new BadRequestException(`Employee ${i + 1}: name is required.`);
+      const lines = Array.from(new Set((Array.isArray(e?.lines) ? e.lines : []).filter(isProductLine))) as ProductLineKey[];
+      if (lines.length === 0) throw new BadRequestException(`${name}: choose Shoe, Sandal, or both.`);
+      const salary = num(e?.monthly_salary);
+      if (salary < 0) throw new BadRequestException(`${name}: salary can't be negative.`);
+      return {
+        id: typeof e?.id === 'string' && e.id ? e.id : randomUUID(),
+        name,
+        role: String(e?.role ?? '').trim() || null,
+        monthly_salary: money(salary),
+        lines,
+        active: e?.active !== false,
+      };
+    });
   }
 
   async updateFactorySettings(dto: any) {
@@ -276,7 +327,16 @@ export class CostingService {
       monthly[k] = num(v);
     }
 
-    const next: FactoryCostSettings = { monthly };
+    const employees = dto?.employees !== undefined ? this.sanitizeEmployees(dto.employees) : current.employees;
+
+    // With staff listed, the salary line is the list's total — kept in step so
+    // the "Total Monthly Factory Cost" and older readers stay truthful.
+    const staff = activeEmployees(employees);
+    if (staff.length > 0) {
+      monthly[LABOUR_FIELD_KEY] = money(staff.reduce((sum, e) => sum + num(e.monthly_salary), 0));
+    }
+
+    const next: FactoryCostSettings = { monthly, employees };
     await this.prisma.setting.upsert({
       where: { key: FACTORY_SETTINGS_KEY },
       update: { value: next as any },
@@ -290,9 +350,11 @@ export class CostingService {
    * What one design's share of the monthly pool works out to.
    * Handy for the settings screen, which previews a few capacities.
    */
-  async previewFactoryAllocation(standardCapacityPairs: unknown) {
-    const { total_monthly } = await this.getFactorySettings();
-    return { total_monthly, ...calcFactoryAllocation(total_monthly, standardCapacityPairs) };
+  async previewFactoryAllocation(standardCapacityPairs: unknown, line?: unknown) {
+    const settings = await this.getFactorySettings();
+    const pool = isProductLine(line) ? settings.line_pools[line] : null;
+    const total = pool ? pool.total : settings.total_monthly;
+    return { total_monthly: total, pool, ...calcFactoryAllocation(total, standardCapacityPairs) };
   }
 
   // ── Retail cost settings ──────────────────────────────────────────────────
@@ -361,7 +423,8 @@ export class CostingService {
   private async computeSnapshot(values: Record<string, unknown>, dto: any, storedCommonPair?: number) {
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
     const retail = await this.getRetailSettings();
-    const factory = await this.getFactorySettings();
+    // Only the wages of people on this design's line, plus the shared bills.
+    const pool = await this.factoryPoolFor(values, dto?.category, dto?.product_name);
 
     // An existing record keeps the common cost it was saved with unless the
     // caller explicitly asks to refresh it, so re-opening an old costing does
@@ -380,7 +443,7 @@ export class CostingService {
       values,
       fields,
       standardCapacityPairs: capacityPairs,
-      factoryMonthlyTotal: factory.total_monthly,
+      factoryMonthlyTotal: pool.total,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair: commonPair,
@@ -452,6 +515,8 @@ export class CostingService {
       retail_profit_pct:
         dto?.retail_profit_pct !== undefined ? num(dto.retail_profit_pct) : existing.retail_profit_pct,
       refresh_retail_common: dto?.refresh_retail_common,
+      category: dto?.category !== undefined ? dto.category : existing.category,
+      product_name: dto?.product_name !== undefined ? dto.product_name : existing.product_name,
     };
 
     const snapshot = await this.computeSnapshot(values, merged, existing.retail_common_cost_pair);
@@ -510,6 +575,8 @@ export class CostingService {
           : source.wholesale_profit_pct,
       retail_profit_pct:
         dto?.retail_profit_pct !== undefined ? num(dto.retail_profit_pct) : source.retail_profit_pct,
+      category: dto?.category !== undefined ? dto.category : source.category,
+      product_name: name,
     };
 
     const snapshot = await this.computeSnapshot(values, merged);
@@ -539,12 +606,13 @@ export class CostingService {
   async preview(dto: any) {
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
     const retail = await this.getRetailSettings();
-    const factory = await this.getFactorySettings();
+    const values = dto?.values ?? {};
+    const pool = await this.factoryPoolFor(values, dto?.category, dto?.product_name);
     return calcCosting({
-      values: dto?.values ?? {},
+      values,
       fields,
       standardCapacityPairs: num(dto?.standard_capacity_pairs),
-      factoryMonthlyTotal: factory.total_monthly,
+      factoryMonthlyTotal: pool.total,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair:

@@ -1,15 +1,58 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DeliverySettingsService } from '../delivery-settings/delivery-settings.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { CalculateCartDto } from './dto/calculate-cart.dto';
+import { assertCampaignWindow, parseCampaignDate } from './campaign-dates';
+
+const DATE_FIX_MARKER = 'campaign_dates_dhaka_fix_v1';
+const HOUR = 60 * 60 * 1000;
 
 @Injectable()
-export class CampaignsService {
+export class CampaignsService implements OnModuleInit {
+  private readonly logger = new Logger(CampaignsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly deliverySettings: DeliverySettingsService,
   ) {}
+
+  /**
+   * One-time repair of campaigns saved before dates were read as Dhaka time.
+   *
+   * The old form sent a bare date, stored as midnight UTC (6 AM Dhaka) — so a
+   * campaign "ending on the 13th" actually ended at 6 AM on the 13th. Those
+   * exact-midnight-UTC values are moved to what the admin meant: start of day
+   * and end of day in Dhaka. Runs once, guarded by a marker in Setting.
+   */
+  async onModuleInit() {
+    try {
+      const done = await this.prisma.setting.findUnique({ where: { key: DATE_FIX_MARKER } });
+      if (done) return;
+      const isUtcMidnight = (d: Date | null) =>
+        !!d && d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+
+      const rows = await this.prisma.campaign.findMany({ select: { id: true, start_date: true, end_date: true } });
+      let fixed = 0;
+      for (const c of rows) {
+        const data: { start_date?: Date; end_date?: Date } = {};
+        // 2026-11-13T00:00Z (meant: 13 Nov) -> 2026-11-13T00:00+06:00
+        if (isUtcMidnight(c.start_date)) data.start_date = new Date(c.start_date!.getTime() - 6 * HOUR);
+        // 2026-11-13T00:00Z (meant: 13 Nov) -> 2026-11-13T23:59:59.999+06:00
+        if (isUtcMidnight(c.end_date)) data.end_date = new Date(c.end_date!.getTime() + 18 * HOUR - 1);
+        if (data.start_date || data.end_date) {
+          await this.prisma.campaign.update({ where: { id: c.id }, data });
+          fixed++;
+        }
+      }
+      await this.prisma.setting.create({
+        data: { key: DATE_FIX_MARKER, value: { fixed, at: new Date().toISOString() } as any },
+      });
+      if (fixed) this.logger.log(`Moved ${fixed} campaign date(s) to Dhaka start/end of day.`);
+    } catch (e) {
+      this.logger.error(`Campaign date repair skipped: ${(e as Error).message}`);
+    }
+  }
 
   findAll() {
     return this.prisma.campaign.findMany({ orderBy: { created_at: 'desc' } });
@@ -32,6 +75,9 @@ export class CampaignsService {
   }
 
   async create(dto: CreateCampaignDto) {
+    const start = parseCampaignDate(dto.start_date, 'start') ?? null;
+    const end = parseCampaignDate(dto.end_date, 'end') ?? null;
+    assertCampaignWindow(start, end);
     return this.prisma.campaign.create({
       data: {
         name: dto.name,
@@ -46,8 +92,8 @@ export class CampaignsService {
         free_gift_product_id: dto.free_gift_product_id || null,
         usage_limit: dto.usage_limit,
         product_ids: dto.product_ids ?? [],
-        start_date: dto.start_date ? new Date(dto.start_date) : null,
-        end_date: dto.end_date ? new Date(dto.end_date) : null,
+        start_date: start,
+        end_date: end,
         is_active: dto.is_active ?? true,
         image_url: dto.image_url,
         headline: dto.headline,
@@ -60,12 +106,26 @@ export class CampaignsService {
     const existing = await this.prisma.campaign.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`Campaign ${id} not found`);
 
-    const data: any = { ...dto };
+    // Only known columns — the PATCH body is not run through the DTO validator.
+    const allowed: (keyof CreateCampaignDto)[] = [
+      'name', 'type', 'code', 'requires_code', 'discount_type', 'discount_value', 'buy_qty', 'get_qty',
+      'free_shipping', 'free_gift_product_id', 'usage_limit', 'product_ids', 'is_active', 'image_url', 'headline', 'body',
+    ];
+    const data: any = {};
+    for (const key of allowed) if ((dto as any)[key] !== undefined) data[key] = (dto as any)[key];
     if (dto.code !== undefined) data.code = dto.code || null;
     if (dto.discount_type !== undefined) data.discount_type = dto.discount_type || null;
     if (dto.free_gift_product_id !== undefined) data.free_gift_product_id = dto.free_gift_product_id || null;
-    if (dto.start_date) data.start_date = new Date(dto.start_date);
-    if (dto.end_date) data.end_date = new Date(dto.end_date);
+
+    // Dates can be changed or cleared (null / "" = no limit).
+    const start = parseCampaignDate((dto as any).start_date, 'start');
+    const end = parseCampaignDate((dto as any).end_date, 'end');
+    if (start !== undefined) data.start_date = start;
+    if (end !== undefined) data.end_date = end;
+    assertCampaignWindow(
+      start !== undefined ? start : existing.start_date,
+      end !== undefined ? end : existing.end_date,
+    );
 
     return this.prisma.campaign.update({ where: { id }, data });
   }

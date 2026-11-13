@@ -5,6 +5,8 @@ import {
   calcCosting,
   calcFactoryAllocation,
   calcFactoryLinePool,
+  FINISH_MAN_FIELD_KEY,
+  finishManRate,
   calcFactoryMonthlyTotal,
   activeEmployees,
   FactoryEmployee,
@@ -30,12 +32,13 @@ import {
   FIELD_SEED_VERSION,
   FIELD_SEED_VERSION_KEY,
   V1_SEED_LABELS,
+  PREVIOUS_SEED_LABELS,
   V1_UPPER_SOLE_KEYS,
   RETAIL_SETTINGS_KEY,
   RetailCostSettings,
 } from './costing.defaults';
 
-const SECTIONS = ['UPPER', 'SOLE', 'FACTORY', 'RETAIL_COMMON', 'RETAIL_PRODUCT'];
+const SECTIONS = ['UPPER', 'SOLE', 'FINISH', 'FACTORY', 'RETAIL_COMMON', 'RETAIL_PRODUCT'];
 const BASES = ['PER_DOZEN', 'PER_PAIR', 'PER_MONTH'];
 const CALCULATORS = ['DIRECT', 'SQFT', 'UNIT', 'SHEET', 'CHEMICAL'];
 
@@ -68,7 +71,7 @@ export class CostingService {
    *   3. Flat v1 Upper/Sole fields the structured set replaces are archived,
    *      never deleted, so nothing that references them can break.
    */
-  private async syncDefaultFields(): Promise<void> {
+  private async syncDefaultFields(fromVersion = 0): Promise<void> {
     const existing = await this.prisma.costFieldDefinition.findMany();
     const byKey = new Map(existing.map((f) => [f.key, f]));
     const defaultKeys = new Set(DEFAULT_COST_FIELDS.map((f) => f.key));
@@ -94,11 +97,11 @@ export class CostingService {
         return;
       }
 
-      // Only refresh the label when it still reads exactly as the version that
+      // Only refresh the label when it still reads exactly as some version
       // seeded it — an admin rename always wins.
-      const seededLabel = V1_SEED_LABELS[f.key];
-      const renamed = seededLabel !== undefined && current.label !== seededLabel;
-      const label = renamed ? current.label : f.label;
+      const seededBefore = [V1_SEED_LABELS[f.key], ...(PREVIOUS_SEED_LABELS[f.key] ?? [])].filter(Boolean);
+      const untouched = current.label === f.label || seededBefore.includes(current.label);
+      const label = untouched ? f.label : current.label;
 
       updates.push(
         this.prisma.costFieldDefinition.update({
@@ -112,8 +115,9 @@ export class CostingService {
             mode: f.mode ?? null,
             help_text: f.help_text ?? current.help_text,
             sort_order: i,
-            // A field the upgrade re-introduces must come back into the form.
-            is_archived: false,
+            // The v2 restructure re-introduced some v1 fields, so it had to bring
+            // them back. Later upgrades leave the admin's archive choices alone.
+            ...(fromVersion < 2 ? { is_archived: false } : {}),
           },
         }),
       );
@@ -152,7 +156,7 @@ export class CostingService {
     });
     const storedVersion = num((marker?.value as any)?.version);
     if (storedVersion < FIELD_SEED_VERSION) {
-      await this.syncDefaultFields();
+      await this.syncDefaultFields(storedVersion);
     }
 
     return this.prisma.costFieldDefinition.findMany({
@@ -278,9 +282,15 @@ export class CostingService {
       PRODUCT_LINES.map((line) => [line, calcFactoryLinePool(monthly, fields, employees, line)]),
     ) as Record<ProductLineKey, ReturnType<typeof calcFactoryLinePool>>;
 
+    const finish_man_rates: Record<ProductLineKey, number> = {
+      SHOE: finishManRate('SHOE', stored?.finish_man_rates),
+      SANDAL: finishManRate('SANDAL', stored?.finish_man_rates),
+    };
+
     return {
       monthly,
       employees,
+      finish_man_rates,
       total_monthly: calcFactoryMonthlyTotal(monthly, fields),
       /** The pool a Shoe design and a Sandal design are each costed against. */
       line_pools,
@@ -296,6 +306,13 @@ export class CostingService {
     const fields = (await this.listFields()) as unknown as CostFieldLike[];
     const line = getLine(values) ?? inferProductLine(category as string, productName as string);
     return calcFactoryLinePool(settings.monthly, fields, settings.employees, line);
+  }
+
+  /** Amounts used for fields left empty on a product — today just the finish man's line rate. */
+  private async defaultEntriesFor(values: Record<string, unknown>, category?: unknown, productName?: unknown) {
+    const settings = await this.getFactorySettings();
+    const line = getLine(values) ?? inferProductLine(category as string, productName as string);
+    return { [FINISH_MAN_FIELD_KEY]: finishManRate(line, settings.finish_man_rates) };
   }
 
   /** Validates the employee list sent from Factory Cost Settings. */
@@ -336,7 +353,17 @@ export class CostingService {
       monthly[LABOUR_FIELD_KEY] = money(staff.reduce((sum, e) => sum + num(e.monthly_salary), 0));
     }
 
-    const next: FactoryCostSettings = { monthly, employees };
+    // Finish man's per-dozen rate for each line.
+    const finish_man_rates: Record<ProductLineKey, number> = { ...current.finish_man_rates };
+    for (const line of PRODUCT_LINES) {
+      const v = dto?.finish_man_rates?.[line];
+      if (v === undefined || v === null || v === '') continue;
+      const n = num(v);
+      if (n < 0) throw new BadRequestException(`${line} finish rate can't be negative.`);
+      finish_man_rates[line] = money(n);
+    }
+
+    const next: FactoryCostSettings = { monthly, employees, finish_man_rates };
     await this.prisma.setting.upsert({
       where: { key: FACTORY_SETTINGS_KEY },
       update: { value: next as any },
@@ -425,6 +452,7 @@ export class CostingService {
     const retail = await this.getRetailSettings();
     // Only the wages of people on this design's line, plus the shared bills.
     const pool = await this.factoryPoolFor(values, dto?.category, dto?.product_name);
+    const defaultEntries = await this.defaultEntriesFor(values, dto?.category, dto?.product_name);
 
     // An existing record keeps the common cost it was saved with unless the
     // caller explicitly asks to refresh it, so re-opening an old costing does
@@ -444,6 +472,7 @@ export class CostingService {
       fields,
       standardCapacityPairs: capacityPairs,
       factoryMonthlyTotal: pool.total,
+      defaultEntries,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair: commonPair,
@@ -608,11 +637,13 @@ export class CostingService {
     const retail = await this.getRetailSettings();
     const values = dto?.values ?? {};
     const pool = await this.factoryPoolFor(values, dto?.category, dto?.product_name);
+    const defaultEntries = await this.defaultEntriesFor(values, dto?.category, dto?.product_name);
     return calcCosting({
       values,
       fields,
       standardCapacityPairs: num(dto?.standard_capacity_pairs),
       factoryMonthlyTotal: pool.total,
+      defaultEntries,
       wholesaleProfitPct: num(dto?.wholesale_profit_pct),
       retailProfitPct: num(dto?.retail_profit_pct),
       retailCommonCostPair:

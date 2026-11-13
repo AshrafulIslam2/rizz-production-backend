@@ -1,4 +1,4 @@
-import { CostBasisKey, CostCalculatorKey, CostSectionKey, FactoryEmployee } from './costing.calc';
+import { CostBasisKey, CostCalculatorKey, CostSectionKey, FactoryEmployee, ProductLineKey } from './costing.calc';
 
 /**
  * Fields created the first time the costing screen is opened.
@@ -26,17 +26,38 @@ export type SeedField = {
 /** Sub-tab ids, shared with the admin UI. */
 export const UPPER_GROUPS = ['materials', 'foam_cover', 'accessories', 'chemicals'] as const;
 export const SOLE_GROUPS = ['insole', 'midsole', 'outsole', 'bit', 'tuffy', 'chemicals'] as const;
+export const FINISH_GROUPS = ['finishing', 'chemicals'] as const;
 
 /** Groups offering a Handmade / Ready Made switch. */
 export const MODE_GROUPS = ['insole', 'outsole', 'bit'] as const;
 
-/** The six chemicals costed identically in both Upper and Sole. */
-const CHEMICALS = ['Adhesive', 'Primer', 'Solution', 'Alco', 'PU Presting', 'Double PU'] as const;
+/**
+ * Chemicals, by the names used on the factory floor.
+ *
+ * `slug` builds the stored key and must never change — saved amounts hang off
+ * it. Several were renamed in seed v4 (Adhesive -> Bangla Pesting and so on);
+ * their slugs stay as they were, so every amount already entered stays put.
+ */
+type Chemical = { slug: string; label: string };
+const CHEM = {
+  bangla: { slug: 'adhesive', label: 'Bangla Pesting' },
+  primerTpr: { slug: 'primer', label: 'Primer TPR' },
+  primerPu: { slug: 'primer_pu', label: 'Primer PU' },
+  solution: { slug: 'solution', label: 'Solution' },
+  alco: { slug: 'alco', label: 'Alco' },
+  pu: { slug: 'pu_presting', label: 'PU Pesting' },
+  double: { slug: 'double_pu', label: 'Double Pesting' },
+  belly: { slug: 'belly', label: 'Belly' },
+} satisfies Record<string, Chemical>;
 
-function chemicalFields(section: CostSectionKey, prefix: string): SeedField[] {
-  return CHEMICALS.map((name) => ({
-    key: `${prefix}_chem_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
-    label: name,
+const UPPER_CHEMICALS: Chemical[] = [CHEM.bangla, CHEM.pu, CHEM.solution, CHEM.alco, CHEM.primerTpr, CHEM.primerPu, CHEM.double];
+const SOLE_CHEMICALS: Chemical[] = [CHEM.solution, CHEM.bangla, CHEM.pu, CHEM.alco, CHEM.belly, CHEM.double, CHEM.primerPu, CHEM.primerTpr];
+const FINISH_CHEMICALS: Chemical[] = [CHEM.pu, CHEM.bangla];
+
+function chemicalFields(section: CostSectionKey, prefix: string, list: Chemical[]): SeedField[] {
+  return list.map((c) => ({
+    key: `${prefix}_chem_${c.slug}`,
+    label: c.label,
     section,
     basis: 'PER_DOZEN' as CostBasisKey,
     calculator: 'CHEMICAL' as CostCalculatorKey,
@@ -64,7 +85,7 @@ export const DEFAULT_COST_FIELDS: SeedField[] = [
   { key: 'upper_other', label: 'Other Upper Cost', section: 'UPPER', basis: 'PER_DOZEN', calculator: 'DIRECT', group: 'accessories' },
 
   // Chemicals
-  ...chemicalFields('UPPER', 'upper'),
+  ...chemicalFields('UPPER', 'upper', UPPER_CHEMICALS),
 
   // ══ SOLE ═══════════════════════════════════════════════════════════════
   // Insole — handmade materials or a ready-made price
@@ -89,7 +110,13 @@ export const DEFAULT_COST_FIELDS: SeedField[] = [
   { key: 'sole_tuffy', label: 'Tuffy', section: 'SOLE', basis: 'PER_DOZEN', calculator: 'SHEET', group: 'tuffy' },
 
   // Sole chemicals
-  ...chemicalFields('SOLE', 'sole'),
+  ...chemicalFields('SOLE', 'sole', SOLE_CHEMICALS),
+
+  // ══ FINISH ═════════════════════════════════════════════════════════════
+  { key: 'finish_color', label: 'Color', section: 'FINISH', basis: 'PER_DOZEN', calculator: 'CHEMICAL', group: 'finishing', help_text: 'Container price ÷ container size × amount used per dozen' },
+  { key: 'finish_color_coat', label: 'Color Coat', section: 'FINISH', basis: 'PER_DOZEN', calculator: 'CHEMICAL', group: 'finishing', help_text: 'Container price ÷ container size × amount used per dozen' },
+  { key: 'finish_man', label: 'Finish Man Cost', section: 'FINISH', basis: 'PER_DOZEN', calculator: 'DIRECT', group: 'finishing', help_text: 'Per dozen. Leave empty to use the line rate from Factory Cost Settings (Shoe ৳680, Sandal ৳280).' },
+  ...chemicalFields('FINISH', 'finish', FINISH_CHEMICALS),
 
   // ══ FACTORY ════════════════════════════════════════════════════════════
   //
@@ -148,8 +175,26 @@ export const FIELD_SEED_VERSION_KEY = 'cost_fields_seed_version';
  * 1 = flat Upper/Sole list.
  * 2 = structured groups with calculators.
  * 3 = factory bills moved to a shop-wide monthly pool.
+ * 4 = chemicals renamed to factory-floor names, Primer PU / Belly added,
+ *     new Finish section.
  */
-export const FIELD_SEED_VERSION = 3;
+export const FIELD_SEED_VERSION = 4;
+
+/**
+ * Labels earlier seeds wrote, for keys whose label v4 changes. The upgrade only
+ * replaces a label that still reads exactly like one of these, so a field the
+ * admin renamed keeps their wording.
+ */
+export const PREVIOUS_SEED_LABELS: Record<string, string[]> = {
+  upper_chem_adhesive: ['Adhesive'],
+  upper_chem_primer: ['Primer'],
+  upper_chem_pu_presting: ['PU Presting'],
+  upper_chem_double_pu: ['Double PU'],
+  sole_chem_adhesive: ['Adhesive'],
+  sole_chem_primer: ['Primer'],
+  sole_chem_pu_presting: ['PU Presting'],
+  sole_chem_double_pu: ['Double PU'],
+};
 
 /** Every Upper/Sole key the v1 seed created. */
 export const V1_UPPER_SOLE_KEYS: string[] = [
@@ -229,6 +274,8 @@ export type FactoryCostSettings = {
    * only the wages of people on its line (see calcFactoryLinePool).
    */
   employees?: FactoryEmployee[];
+  /** Finish man's piece rate per dozen, by line. Missing = 680 shoe / 280 sandal. */
+  finish_man_rates?: Partial<Record<ProductLineKey, number>>;
 };
 
 export const DEFAULT_FACTORY_SETTINGS: FactoryCostSettings = {

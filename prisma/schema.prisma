@@ -815,6 +815,7 @@ enum CostSection {
   FACTORY         // Tab 4 — labour + factory overhead, entered per dozen
   RETAIL_COMMON   // Monthly shop expenses, divided by expected monthly sales
   RETAIL_PRODUCT  // Per-product retail extras (box, bag), already per pair
+  FINISH          // Colour, colour coat, finish man, finishing chemicals — per dozen (appended: adding an enum value is safe)
 }
 
 /// How the amount typed into a field should be interpreted.
